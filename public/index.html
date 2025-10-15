@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Painel de Comunicações — Octa</title>
   <style>
     :root{
@@ -42,7 +42,6 @@
     .card{ border:1px solid var(--slate-200); border-radius:12px; padding:10px; background:#fff; color:#0b1220; }
     .input, .select{ width:100%; border:1px solid var(--slate-200); border-radius:10px; padding:8px 10px; font-size:12px; }
     .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:160px; }
-
     .muted{ color:#6b7280; font-size:12px; }
     .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
     .badge{ background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490; padding:2px 6px; border-radius:999px; font-size:11px; }
@@ -52,6 +51,10 @@
     a.link{ color:#0b5fe0; text-decoration:none; } a.link:hover{ text-decoration:underline; }
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
+
+    /* invalid highlight */
+    .invalid{ border-color: var(--rose-600) !important; box-shadow: 0 0 0 2px rgba(225,17,72,.12); }
+    small.err{ color: var(--rose-600); font-weight:700; }
   </style>
 </head>
 <body>
@@ -91,21 +94,28 @@
                 <option>Alto & Altíssimo</option>
               </select>
             </label>
+
             <label class="label">Etapa
               <select class="select" id="etapa"></select>
             </label>
+
             <label class="label">Responsável na Loja
               <input class="input" id="responsavel" placeholder="Nome da pessoa responsável na loja (ou nome da loja)">
             </label>
+
             <label class="label">Loja
               <input class="input" id="loja" placeholder="Nome da loja">
             </label>
+
             <label class="label">CNPJ
               <input class="input" id="cnpj" placeholder="00.000.000/0000-00">
             </label>
+
+            <!-- Plataforma fixa: VINDI -->
             <label class="label">Plataforma
-              <input class="input" id="plataforma" value="Plataforma">
+              <input class="input" id="plataforma" value="VINDI" readonly>
             </label>
+
             <label class="label" style="grid-column:1/-1">Produto irregular
               <input class="input" id="produto" placeholder="Descrição do produto">
             </label>
@@ -134,20 +144,26 @@
             <div class="card"><span class="muted">Etapa</span><div id="viewEtapa" style="font-weight:700;color:#0b1220;">—</div></div>
             <div class="card"><span class="muted">Prazo</span><div id="viewPrazo" style="font-weight:700;color:#0b1220;">—</div></div>
           </div>
+
           <div class="card" style="margin-top:10px;background:#fff;">
             <div><b>Status:</b> <span id="viewStatus" class="muted">—</span></div>
             <div><b>Vencimento:</b> <span id="viewVenc">—</span></div>
             <div><b>Próxima ação:</b> <span id="viewAcao">—</span></div>
           </div>
+
           <div class="grid grid-2" style="margin-top:10px;">
             <label class="label">Link do ticket (Octadesk)
               <input class="input" id="linkTicket" placeholder="https://octadesk.com/...">
+              <small id="errTicket" class="err" style="display:none">Obrigatório. Informe uma URL válida.</small>
             </label>
+
             <label class="label">Analista (selecione ou digite)
               <input class="input" id="analistaAg" list="analistasList" placeholder="Ex.: SILVÉRIA COSTA">
               <datalist id="analistasList"></datalist>
+              <small id="errAnalista" class="err" style="display:none">Obrigatório. Selecione ou digite um nome.</small>
             </label>
           </div>
+
           <div style="margin-top:8px;">
             <button class="btn" id="criarTarefa">Criar tarefa</button>
           </div>
@@ -158,8 +174,12 @@
           <div class="filters">
             <span class="muted">Data:</span>
             <input type="date" class="input" id="filtroData" style="width:170px">
+
             <span class="muted">Analista:</span>
-            <select class="select" id="filtroAnalista" style="width:220px"></select>
+            <select class="select" id="filtroAnalista" style="width:180px">
+              <option value="">Todos</option>
+            </select>
+
             <span class="muted">Comunicação:</span>
             <select class="select" id="filtroTipo" style="width:220px">
               <option value="">Todas</option>
@@ -169,6 +189,7 @@
               <option>Bloqueio Efetivado</option>
               <option>Descredenciamento</option>
             </select>
+
             <button class="btn" id="btnExport">Exportar CSV (filtro)</button>
           </div>
 
@@ -182,15 +203,7 @@
   </div>
 
 <script>
-/* ========= Configurações ========= */
-const ANALYSTS = [
-  "Todos",
-  "SILVÉRIA COSTA",
-  "IGOR ARAUJO",
-  "DIEGO RIBEIRO",
-  "RAFAEL CORONA"
-];
-
+/* === DADOS/MODELOS === */
 const FLOWS = {
   "Médio & Baixo": [
     { etapa:"Comunicação Inicial", prazoUteis:10, proximaAcao:"Enviar Aviso 1 se não houver resposta", sugProxEtapa:"Aviso 1" },
@@ -255,19 +268,19 @@ Permanecemos à disposição para esclarecimentos formais.
 Atenciosamente,` },
 };
 
-/* ========= Estado e utilitários ========= */
-const state = { risco:"Médio & Baixo", etapa:"Comunicação Inicial", dataBase: new Date().toISOString().slice(0,10),
-  responsavel:"", loja:"", cnpj:"", plataforma:"Plataforma", produto:"" };
+/* Analistas fixos */
+const FIXED_ANALYSTS = ["SILVÉRIA COSTA", "IGOR ARAUJO", "DIEGO RIBEIRO", "RAFAEL CORONA"];
 
-const agendaStoreKey = "octa_agenda_html_v2";
+/* === ESTADO & STORAGE === */
+const state = {
+  risco:"Médio & Baixo",
+  etapa:"Comunicação Inicial",
+  dataBase:new Date().toISOString().slice(0,10),
+  responsavel:"", loja:"", cnpj:"", plataforma:"VINDI", produto:""
+};
+const agendaStoreKey = "octa_agenda_html";
 
-/* normaliza Date/ISO para chave YYYY-MM-DD, evitando fuso */
-function toKey(d){
-  const dt = new Date(d);
-  dt.setHours(0,0,0,0);
-  const tzAdjusted = new Date(dt.getTime() - dt.getTimezoneOffset()*60000);
-  return tzAdjusted.toISOString().slice(0,10);
-}
+/* === HELPERS DE DATA === */
 function addBusinessDays(baseDate, businessDays){
   const date = new Date(baseDate); let added=0;
   while(added<businessDays){
@@ -277,26 +290,25 @@ function addBusinessDays(baseDate, businessDays){
   }
   return date;
 }
-function fmt(date){
-  return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}).format(date);
-}
+function fmt(date){ return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}).format(date); }
 function selectedInfo(){ return FLOWS[state.risco].find(e=>e.etapa===state.etapa) || FLOWS[state.risco][0]; }
 function fillTemplate(t){
   const limite = fmt(addBusinessDays(state.dataBase,(selectedInfo().prazoUteis||0)));
   return t.replaceAll("{{RESPONSAVEL}}", state.responsavel||"<RESPONSÁVEL>")
     .replaceAll("{{LOJA}}", state.loja||"<LOJA>")
     .replaceAll("{{CNPJ}}", state.cnpj||"<CNPJ>")
-    .replaceAll("{{PLATAFORMA}}", state.plataforma||"<PLATAFORMA>")
+    .replaceAll("{{PLATAFORMA}}", state.plataforma||"VINDI")
     .replaceAll("{{PRODUTO}}", state.produto||"<PRODUTO>")
     .replaceAll("{{DATA_LIMITE}}", limite)
     .replaceAll("{{DATA_DESC}}", fmt(new Date()));
 }
-function overdueInfo(dueKey){
-  const todayKey = toKey(new Date());
-  return todayKey > dueKey;
+function overdueInfo(due){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(due); d.setHours(0,0,0,0);
+  return today.getTime()>d.getTime();
 }
 
-/* ========= UI Comunicações ========= */
+/* === UI REFRESH === */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -310,7 +322,6 @@ function refreshMacro(){
 function refreshCommon(){
   const info=selectedInfo();
   const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
-  const dueKey = toKey(due);
 
   document.getElementById("prazo").textContent=(info.prazoUteis||0)+" dias úteis";
   document.getElementById("dataBase").value=state.dataBase;
@@ -322,7 +333,7 @@ function refreshCommon(){
 
   const vs=document.getElementById("viewVenc");
   const st=document.getElementById("viewStatus");
-  const over=overdueInfo(dueKey);
+  const over=overdueInfo(due);
   vs.textContent=fmt(due);
   vs.className=over?"due-red":"";
   st.innerHTML=over?'<span class="badge-red">VENCIDO</span>':'<span class="badge">No prazo</span>';
@@ -331,108 +342,115 @@ function refreshCommon(){
 }
 function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(); }
 
-/* ========= Storage Agenda ========= */
+/* === STORAGE === */
 function getAgendaList(){ return JSON.parse(localStorage.getItem(agendaStoreKey)||"[]"); }
 function setAgendaList(list){ localStorage.setItem(agendaStoreKey, JSON.stringify(list)); }
 
-/* ========= Analistas (select + datalist) ========= */
-function fillAnalystSelects(){
-  const sel = document.getElementById("filtroAnalista");
-  sel.innerHTML = ANALYSTS.map((a,i)=>`<option value="${a}" ${i===0?'selected':''}>${a}</option>`).join("");
+/* === ANALISTAS (lista e filtro) === */
+function populateAnalistasFilter(list){
+  const select=document.getElementById("filtroAnalista");
+  const cur=select.value;
 
-  const dl = document.getElementById("analistasList");
-  dl.innerHTML = ANALYSTS.filter(a=>a!=="Todos").map(a=>`<option value="${a}"></option>`).join("");
+  const dynamic = list.map(t=>t.analista).filter(Boolean);
+  const names = Array.from(new Set([...FIXED_ANALYSTS, ...dynamic])).sort();
+
+  select.innerHTML = `<option value="">Todos</option>` + names.map(n=>`<option ${cur===n?'selected':''}>${n}</option>`).join("");
+
+  const dl=document.getElementById("analistasList");
+  dl.innerHTML = names.map(n=>`<option value="${n}"></option>`).join("");
 }
 
-/* ========= Agenda (render, filtro e export) ========= */
+/* === LISTAGEM DA AGENDA === */
+function filteredItemsForDay(list,alvo,tipo,analista){
+  const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
+  return list.filter(t=>{
+    const d=new Date(t.due);
+    if(!same(d)) return false;
+    if(tipo && t.etapa!==tipo) return false;
+    if(analista && t.analista!==analista) return false;
+    return true;
+  });
+}
 function updateAgendaList(){
-  const filtro = document.getElementById("filtroData").value || new Date().toISOString().slice(0,10);
-  const tipo = document.getElementById("filtroTipo").value;
-  const analystFilter = document.getElementById("filtroAnalista").value;
+  const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
+  const alvo=new Date(filtro);
+  const tipo=document.getElementById("filtroTipo").value;
+  const analista=document.getElementById("filtroAnalista").value;
+  const list=getAgendaList();
 
-  const list = getAgendaList();
+  populateAnalistasFilter(list);
 
-  // chips por etapa no dia
-  const byEtapa = {};
-  list.filter(t => t.dueKey === filtro).forEach(t => byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1);
-  const chips = document.getElementById("resumoChips");
-  chips.innerHTML = Object.keys(byEtapa).length
+  const ui=document.getElementById("listaAgenda");
+  ui.innerHTML="";
+
+  const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
+  const byEtapa={};
+  list.filter(t=>same(new Date(t.due))).forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
+  const chips=document.getElementById("resumoChips");
+  chips.innerHTML=Object.keys(byEtapa).length
     ? Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join("")
     : `<span class="muted">Sem comunicações neste dia.</span>`;
 
-  // itens filtrados
-  const itens = list.filter(t=>{
-    if (t.dueKey !== filtro) return false;
-    if (tipo && t.etapa !== tipo) return false;
-    if (analystFilter && analystFilter !== "Todos" && t.analista !== analystFilter) return false;
-    return true;
-  });
-
-  const ui = document.getElementById("listaAgenda");
-  ui.innerHTML = "";
-
-  if (itens.length === 0){
-    ui.innerHTML = `<div class="muted">Nenhuma tarefa para esta data.</div>`;
-  } else {
+  const itens=filteredItemsForDay(list,alvo,tipo,analista);
+  if(itens.length===0){
+    ui.innerHTML=`<div class="muted">Nenhuma tarefa para esta data.</div>`;
+  }else{
     itens.forEach(t=>{
-      const over = overdueInfo(t.dueKey);
-      const vencTxt = t.dueKey.split("-").reverse().join("/"); // exibe dd/mm/aaaa
-      const div = document.createElement("div");
-      div.className = "card";
-      div.style.background = "#fff";
-      div.innerHTML = `
+      const li=document.createElement("div");
+      li.className="card"; li.style.background="#fff";
+      const over=overdueInfo(t.due);
+      const venc=fmt(new Date(t.due));
+      li.innerHTML=`
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
           <div><b>${t.titulo}</b> <span class="pill">${t.risco}</span></div>
           <span class="${over?'badge-red':'badge'}">${over?'VENCIDO':(t.analista||"—")}</span>
         </div>
         <div class="muted">Cliente: <b>${t.cliente}</b></div>
-        <div class="muted">Etapa: ${t.etapa} • Venc.: <b class="${over?'due-red':''}">${vencTxt}</b></div>
+        <div class="muted">Etapa: ${t.etapa} • Venc.: <b class="${over?'due-red':''}">${venc}</b></div>
         <div class="muted">Obs: ${t.obs||"—"}</div>
         ${t.ticket?`<div><a class="link" href="${t.ticket}" target="_blank" rel="noopener">🔗 Abrir ticket</a></div>`:""}
       `;
-      ui.appendChild(div);
+      ui.appendChild(li);
     });
   }
-  document.getElementById("totalAgenda").textContent = "Total salvas: " + list.length;
+  document.getElementById("totalAgenda").textContent="Total salvas: "+list.length;
 }
 
+/* === EXPORTAR CSV === */
 function exportCsv(){
-  const filtro = document.getElementById("filtroData").value || new Date().toISOString().slice(0,10);
-  const tipo = document.getElementById("filtroTipo").value;
-  const analystFilter = document.getElementById("filtroAnalista").value;
-  const list = getAgendaList();
-  const itens = list.filter(t=>{
-    if (t.dueKey !== filtro) return false;
-    if (tipo && t.etapa !== tipo) return false;
-    if (analystFilter && analystFilter !== "Todos" && t.analista !== analystFilter) return false;
-    return true;
-  });
-
-  if (!itens.length){ alert("Nada para exportar neste filtro."); return; }
-
-  const headers = ["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
-  const rows = itens.map(t=>[
-    t.id,
-    t.cliente,
-    t.etapa,
-    t.risco,
-    t.dueKey.split("-").reverse().join("/"),
-    t.analista || "",
-    t.obs || "",
-    t.ticket || "",
-    overdueInfo(t.dueKey) ? "VENCIDO" : "No prazo"
-  ]);
-
-  const csv = [headers, ...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analystFilter?("_"+analystFilter.replaceAll(" ","_")):""}.csv`;
+  const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
+  const alvo=new Date(filtro);
+  const tipo=document.getElementById("filtroTipo").value;
+  const analista=document.getElementById("filtroAnalista").value;
+  const list=getAgendaList();
+  const itens=filteredItemsForDay(list,alvo,tipo,analista);
+  const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
+  const rows=itens.map(t=>[t.id,t.cliente,t.etapa,t.risco,fmt(new Date(t.due)),t.analista||"",t.obs||"",t.ticket||"",overdueInfo(t.due)?"VENCIDO":"No prazo"]);
+  const csv=[headers,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download=`agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analista?("_"+analista.replaceAll(" ","_")):""}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-/* ========= Eventos globais ========= */
+/* === VALIDAÇÕES === */
+function isValidUrl(u){
+  try{ const x=new URL(u); return /^https?:/.test(x.protocol); }catch(e){ return false; }
+}
+function requireField(el, errEl, validator){
+  el.classList.remove("invalid");
+  errEl.style.display="none";
+  const val = (el.value||"").trim();
+  const ok = validator ? validator(val) : (val.length>0);
+  if(!ok){
+    el.classList.add("invalid");
+    errEl.style.display="inline";
+    el.focus();
+  }
+  return ok;
+}
+
+/* === EVENTOS === */
 document.getElementById("btn-macros").addEventListener("click",(e)=>{
   e.stopPropagation();
   const p=document.getElementById("panel");
@@ -452,12 +470,11 @@ document.querySelectorAll(".tab").forEach(t=>{
     document.getElementById("tab-agenda").style.display=key==="agenda"?"block":"none";
   });
 });
-
 document.getElementById("risco").addEventListener("change",(e)=>{
   state.risco=e.target.value; state.etapa=FLOWS[state.risco][0].etapa; updateEtapas(); refreshAll();
 });
 document.getElementById("etapa").addEventListener("change",(e)=>{ state.etapa=e.target.value; refreshAll(); });
-["responsavel","loja","cnpj","plataforma","produto"].forEach(id=>{
+["responsavel","loja","cnpj","produto"].forEach(id=>{
   document.getElementById(id).addEventListener("input",(e)=>{ state[id]=e.target.value; refreshAll(); });
 });
 document.getElementById("dataBase").addEventListener("change",(e)=>{ state.dataBase=e.target.value; refreshAll(); });
@@ -471,50 +488,51 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   ta.value=(ta.value?ta.value+"\n\n":"")+txt;
 });
 
-/* Criar tarefa (Agendados) */
+/* Criar tarefa com validação obrigatória */
 document.getElementById("criarTarefa").addEventListener("click",()=>{
-  const info=selectedInfo();
-  const due = addBusinessDays(state.dataBase, info.prazoUteis||0);
-  const dueKey = toKey(due);
+  const linkEl = document.getElementById("linkTicket");
+  const errTicket = document.getElementById("errTicket");
+  const analistaEl = document.getElementById("analistaAg");
+  const errAnalista = document.getElementById("errAnalista");
 
-  const item = {
-    id: crypto?.randomUUID?.() || String(Date.now()),
-    titulo: info.sugProxEtapa ? `Agendar próxima etapa: ${info.sugProxEtapa}` : `Revisar etapa: ${info.etapa}`,
-    cliente: state.loja || "<LOJA>",
-    etapa: info.etapa,
-    dueKey,                   // chave normalizada para filtro
-    obs: info.proximaAcao,
-    risco: state.risco,
-    ticket: (document.getElementById("linkTicket").value || "").trim(),
-    analista: (document.getElementById("analistaAg").value || "").trim()
+  const okTicket   = requireField(linkEl, errTicket, isValidUrl);
+  const okAnalista = requireField(analistaEl, errAnalista, (v)=>v.length>0);
+
+  if(!okTicket || !okAnalista) return;
+
+  const info=selectedInfo(); const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
+  const item={
+    id:crypto.randomUUID(),
+    titulo:info.sugProxEtapa?`Agendar próxima etapa: ${info.sugProxEtapa}`:`Revisar etapa: ${info.etapa}`,
+    cliente:state.loja||"<LOJA>",
+    etapa:info.etapa,
+    due,
+    obs:info.proximaAcao,
+    risco:state.risco,
+    ticket:(linkEl.value||"").trim(),
+    analista:(analistaEl.value||"").trim()
   };
-
-  const list = getAgendaList();
-  list.unshift(item);
-  setAgendaList(list);
-
+  const list=getAgendaList(); list.unshift(item); setAgendaList(list);
   document.getElementById("inserirMacro").click();
   updateAgendaList();
   alert("Tarefa criada e comunicação inserida na descrição!");
 });
 
-/* Filtros da Agenda */
+/* Filtros/Export */
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
   document.getElementById(id).addEventListener("change",updateAgendaList);
 });
 document.getElementById("btnExport").addEventListener("click",exportCsv);
 
-/* ========= Boot ========= */
+/* === BOOT === */
 (function boot(){
   document.getElementById("dataBase").value=state.dataBase;
-
-  // preencher analistas nos campos (Agenda e Agendados)
-  fillAnalystSelects();
-
-  // data padrão: hoje
   document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
-
   updateEtapas(); refreshAll();
+
+  /* Pré-popula datalist de analistas fixos na primeira carga */
+  const dl=document.getElementById("analistasList");
+  dl.innerHTML = FIXED_ANALYSTS.map(n=>`<option value="${n}"></option>`).join("");
 })();
 </script>
 </body>
