@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel de Comunicações — Octa</title>
   <style>
     :root{
@@ -11,28 +11,37 @@
       --rose-600:#e11d48; --rose-50:#fff1f2;
     }
     *{ box-sizing:border-box; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
-    body{ margin:0; background:var(--slate-100); color:#0b1220; }
-    .page{ max-width:1100px; margin:20px auto 140px auto; background:#fff; border:1px solid var(--slate-200);
-           border-radius:14px; overflow:hidden; box-shadow:0 12px 34px rgba(16,24,40,.08); }
+    html, body { height:100%; }
+    body{
+      margin:0; background:var(--slate-100); color:#0b1220;
+      overflow-y:auto;              /* garante rolagem sempre */
+      -webkit-overflow-scrolling:touch; /* rolagem suave no iOS */
+    }
+    .page{
+      max-width:1100px; margin:20px auto 160px auto; background:#fff; border:1px solid var(--slate-200);
+      border-radius:14px; overflow:hidden; box-shadow:0 12px 34px rgba(16,24,40,.08);
+    }
     .bar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0f172a; color:#fff; }
     .content{ padding:16px; }
     .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
     .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
 
-    /* Footer */
-    .footer{ position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
-             background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
-             border:1px solid #00000055; z-index:9999; }
+    /* Footer fixo */
+    .footer{
+      position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
+      background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
+      border:1px solid #00000055; z-index:9999; max-width:95vw;
+    }
     .footer-inner{ display:flex; justify-content:flex-end; gap:10px; padding:12px 16px; }
     .btn{ border:0; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
     .btn.white{ background:#fff; color:#111827; }
 
-    /* Panel */
-    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; }
+    /* Painel */
+    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; max-width:95vw; }
     .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
     .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px; }
     .panel .body{ padding:12px; background:#fff; }
-    .tabs{ display:flex; gap:8px; margin-bottom:8px; }
+    .tabs{ display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .tab{ padding:7px 12px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
     .tab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
 
@@ -42,6 +51,7 @@
     .card{ border:1px solid var(--slate-200); border-radius:12px; padding:10px; background:#fff; color:#0b1220; }
     .input, .select{ width:100%; border:1px solid var(--slate-200); border-radius:10px; padding:8px 10px; font-size:12px; }
     .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:160px; }
+
     .muted{ color:#6b7280; font-size:12px; }
     .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
     .badge{ background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490; padding:2px 6px; border-radius:999px; font-size:11px; }
@@ -52,9 +62,18 @@
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
 
-    /* invalid highlight */
-    .invalid{ border-color: var(--rose-600) !important; box-shadow: 0 0 0 2px rgba(225,17,72,.12); }
-    small.err{ color: var(--rose-600); font-weight:700; }
+    /* Botão flutuante “voltar ao topo” */
+    #scrollTop{
+      position:fixed; right:18px; bottom:96px; width:42px; height:42px; border-radius:50%;
+      display:none; align-items:center; justify-content:center; font-weight:900;
+      background:#0f172a; color:#fff; border:1px solid #0006; z-index:10001; cursor:pointer;
+      box-shadow:0 6px 18px rgba(0,0,0,.2);
+    }
+
+    @media (max-width:800px){
+      .grid-2{ grid-template-columns:1fr; }
+      .grid-3{ grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -75,6 +94,9 @@
     </div>
   </div>
 
+  <!-- Botão flutuante para voltar ao topo -->
+  <button id="scrollTop" title="Voltar ao topo">↑</button>
+
   <div class="panel" id="panel">
     <div class="wrap">
       <div class="hdr">🧩 Painel — Comunicações • Agendados • Agenda</div>
@@ -94,7 +116,6 @@
                 <option>Alto & Altíssimo</option>
               </select>
             </label>
-
             <label class="label">Etapa
               <select class="select" id="etapa"></select>
             </label>
@@ -102,7 +123,6 @@
             <label class="label">Responsável na Loja
               <input class="input" id="responsavel" placeholder="Nome da pessoa responsável na loja (ou nome da loja)">
             </label>
-
             <label class="label">Loja
               <input class="input" id="loja" placeholder="Nome da loja">
             </label>
@@ -110,9 +130,8 @@
             <label class="label">CNPJ
               <input class="input" id="cnpj" placeholder="00.000.000/0000-00">
             </label>
-
-            <!-- Plataforma fixa: VINDI -->
             <label class="label">Plataforma
+              <!-- Fixo VINDI e somente leitura -->
               <input class="input" id="plataforma" value="VINDI" readonly>
             </label>
 
@@ -144,26 +163,20 @@
             <div class="card"><span class="muted">Etapa</span><div id="viewEtapa" style="font-weight:700;color:#0b1220;">—</div></div>
             <div class="card"><span class="muted">Prazo</span><div id="viewPrazo" style="font-weight:700;color:#0b1220;">—</div></div>
           </div>
-
           <div class="card" style="margin-top:10px;background:#fff;">
             <div><b>Status:</b> <span id="viewStatus" class="muted">—</span></div>
             <div><b>Vencimento:</b> <span id="viewVenc">—</span></div>
             <div><b>Próxima ação:</b> <span id="viewAcao">—</span></div>
           </div>
-
           <div class="grid grid-2" style="margin-top:10px;">
             <label class="label">Link do ticket (Octadesk)
-              <input class="input" id="linkTicket" placeholder="https://octadesk.com/...">
-              <small id="errTicket" class="err" style="display:none">Obrigatório. Informe uma URL válida.</small>
+              <input class="input" id="linkTicket" placeholder="https://octadesk.com/..." />
             </label>
-
             <label class="label">Analista (selecione ou digite)
-              <input class="input" id="analistaAg" list="analistasList" placeholder="Ex.: SILVÉRIA COSTA">
+              <input class="input" id="analistaAg" list="analistasList" placeholder="Ex.: SILVÉRIA COSTA" />
               <datalist id="analistasList"></datalist>
-              <small id="errAnalista" class="err" style="display:none">Obrigatório. Selecione ou digite um nome.</small>
             </label>
           </div>
-
           <div style="margin-top:8px;">
             <button class="btn" id="criarTarefa">Criar tarefa</button>
           </div>
@@ -174,12 +187,10 @@
           <div class="filters">
             <span class="muted">Data:</span>
             <input type="date" class="input" id="filtroData" style="width:170px">
-
             <span class="muted">Analista:</span>
-            <select class="select" id="filtroAnalista" style="width:180px">
+            <select class="select" id="filtroAnalista" style="width:220px">
               <option value="">Todos</option>
             </select>
-
             <span class="muted">Comunicação:</span>
             <select class="select" id="filtroTipo" style="width:220px">
               <option value="">Todas</option>
@@ -189,7 +200,6 @@
               <option>Bloqueio Efetivado</option>
               <option>Descredenciamento</option>
             </select>
-
             <button class="btn" id="btnExport">Exportar CSV (filtro)</button>
           </div>
 
@@ -203,7 +213,7 @@
   </div>
 
 <script>
-/* === DADOS/MODELOS === */
+/* =================== CONFIG / DADOS =================== */
 const FLOWS = {
   "Médio & Baixo": [
     { etapa:"Comunicação Inicial", prazoUteis:10, proximaAcao:"Enviar Aviso 1 se não houver resposta", sugProxEtapa:"Aviso 1" },
@@ -268,10 +278,13 @@ Permanecemos à disposição para esclarecimentos formais.
 Atenciosamente,` },
 };
 
-/* Analistas fixos */
-const FIXED_ANALYSTS = ["SILVÉRIA COSTA", "IGOR ARAUJO", "DIEGO RIBEIRO", "RAFAEL CORONA"];
+const ANALISTAS_BASE = [
+  "SILVÉRIA COSTA",
+  "IGOR ARAUJO",
+  "DIEGO RIBEIRO",
+  "RAFAEL CORONA",
+];
 
-/* === ESTADO & STORAGE === */
 const state = {
   risco:"Médio & Baixo",
   etapa:"Comunicação Inicial",
@@ -280,24 +293,26 @@ const state = {
 };
 const agendaStoreKey = "octa_agenda_html";
 
-/* === HELPERS DE DATA === */
+/* ============== UTIL ============== */
 function addBusinessDays(baseDate, businessDays){
   const date = new Date(baseDate); let added=0;
-  while(added<businessDays){
+  while (added < businessDays){
     date.setDate(date.getDate()+1);
     const d=date.getDay();
-    if(d!==0 && d!==6){ added++; }
+    if(d !== 0 && d !== 6) added++;
   }
   return date;
 }
-function fmt(date){ return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}).format(date); }
+function fmt(date){
+  return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}).format(date);
+}
 function selectedInfo(){ return FLOWS[state.risco].find(e=>e.etapa===state.etapa) || FLOWS[state.risco][0]; }
 function fillTemplate(t){
   const limite = fmt(addBusinessDays(state.dataBase,(selectedInfo().prazoUteis||0)));
   return t.replaceAll("{{RESPONSAVEL}}", state.responsavel||"<RESPONSÁVEL>")
     .replaceAll("{{LOJA}}", state.loja||"<LOJA>")
     .replaceAll("{{CNPJ}}", state.cnpj||"<CNPJ>")
-    .replaceAll("{{PLATAFORMA}}", state.plataforma||"VINDI")
+    .replaceAll("{{PLATAFORMA}}", "VINDI")
     .replaceAll("{{PRODUTO}}", state.produto||"<PRODUTO>")
     .replaceAll("{{DATA_LIMITE}}", limite)
     .replaceAll("{{DATA_DESC}}", fmt(new Date()));
@@ -305,10 +320,10 @@ function fillTemplate(t){
 function overdueInfo(due){
   const today=new Date(); today.setHours(0,0,0,0);
   const d=new Date(due); d.setHours(0,0,0,0);
-  return today.getTime()>d.getTime();
+  return today.getTime() > d.getTime();
 }
 
-/* === UI REFRESH === */
+/* ============== RENDER ============== */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -342,25 +357,25 @@ function refreshCommon(){
 }
 function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(); }
 
-/* === STORAGE === */
+/* ============== AGENDA (LocalStorage) ============== */
 function getAgendaList(){ return JSON.parse(localStorage.getItem(agendaStoreKey)||"[]"); }
 function setAgendaList(list){ localStorage.setItem(agendaStoreKey, JSON.stringify(list)); }
 
-/* === ANALISTAS (lista e filtro) === */
+function unionAnalistasFrom(list){
+  const fromList = list.map(t=>t.analista).filter(Boolean);
+  const names = Array.from(new Set([...ANALISTAS_BASE, ...fromList])).sort();
+  return names;
+}
 function populateAnalistasFilter(list){
+  const names = unionAnalistasFrom(list);
   const select=document.getElementById("filtroAnalista");
   const cur=select.value;
-
-  const dynamic = list.map(t=>t.analista).filter(Boolean);
-  const names = Array.from(new Set([...FIXED_ANALYSTS, ...dynamic])).sort();
-
   select.innerHTML = `<option value="">Todos</option>` + names.map(n=>`<option ${cur===n?'selected':''}>${n}</option>`).join("");
 
   const dl=document.getElementById("analistasList");
   dl.innerHTML = names.map(n=>`<option value="${n}"></option>`).join("");
 }
 
-/* === LISTAGEM DA AGENDA === */
 function filteredItemsForDay(list,alvo,tipo,analista){
   const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
   return list.filter(t=>{
@@ -371,6 +386,7 @@ function filteredItemsForDay(list,alvo,tipo,analista){
     return true;
   });
 }
+
 function updateAgendaList(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
   const alvo=new Date(filtro);
@@ -387,7 +403,7 @@ function updateAgendaList(){
   const byEtapa={};
   list.filter(t=>same(new Date(t.due))).forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
   const chips=document.getElementById("resumoChips");
-  chips.innerHTML=Object.keys(byEtapa).length
+  chips.innerHTML = Object.keys(byEtapa).length
     ? Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join("")
     : `<span class="muted">Sem comunicações neste dia.</span>`;
 
@@ -416,7 +432,6 @@ function updateAgendaList(){
   document.getElementById("totalAgenda").textContent="Total salvas: "+list.length;
 }
 
-/* === EXPORTAR CSV === */
 function exportCsv(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
   const alvo=new Date(filtro);
@@ -433,24 +448,7 @@ function exportCsv(){
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-/* === VALIDAÇÕES === */
-function isValidUrl(u){
-  try{ const x=new URL(u); return /^https?:/.test(x.protocol); }catch(e){ return false; }
-}
-function requireField(el, errEl, validator){
-  el.classList.remove("invalid");
-  errEl.style.display="none";
-  const val = (el.value||"").trim();
-  const ok = validator ? validator(val) : (val.length>0);
-  if(!ok){
-    el.classList.add("invalid");
-    errEl.style.display="inline";
-    el.focus();
-  }
-  return ok;
-}
-
-/* === EVENTOS === */
+/* ============== EVENTOS UI ============== */
 document.getElementById("btn-macros").addEventListener("click",(e)=>{
   e.stopPropagation();
   const p=document.getElementById("panel");
@@ -470,6 +468,7 @@ document.querySelectorAll(".tab").forEach(t=>{
     document.getElementById("tab-agenda").style.display=key==="agenda"?"block":"none";
   });
 });
+
 document.getElementById("risco").addEventListener("change",(e)=>{
   state.risco=e.target.value; state.etapa=FLOWS[state.risco][0].etapa; updateEtapas(); refreshAll();
 });
@@ -488,17 +487,20 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   ta.value=(ta.value?ta.value+"\n\n":"")+txt;
 });
 
-/* Criar tarefa com validação obrigatória */
+/* Validação obrigatória na criação */
 document.getElementById("criarTarefa").addEventListener("click",()=>{
-  const linkEl = document.getElementById("linkTicket");
-  const errTicket = document.getElementById("errTicket");
-  const analistaEl = document.getElementById("analistaAg");
-  const errAnalista = document.getElementById("errAnalista");
-
-  const okTicket   = requireField(linkEl, errTicket, isValidUrl);
-  const okAnalista = requireField(analistaEl, errAnalista, (v)=>v.length>0);
-
-  if(!okTicket || !okAnalista) return;
+  const ticket=(document.getElementById("linkTicket").value||"").trim();
+  const analista=(document.getElementById("analistaAg").value||"").trim();
+  if(!ticket){
+    alert("Preencha o link do ticket (obrigatório).");
+    document.getElementById("linkTicket").focus();
+    return;
+  }
+  if(!analista){
+    alert("Selecione ou digite o Analista (obrigatório).");
+    document.getElementById("analistaAg").focus();
+    return;
+  }
 
   const info=selectedInfo(); const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
   const item={
@@ -509,30 +511,33 @@ document.getElementById("criarTarefa").addEventListener("click",()=>{
     due,
     obs:info.proximaAcao,
     risco:state.risco,
-    ticket:(linkEl.value||"").trim(),
-    analista:(analistaEl.value||"").trim()
+    ticket, analista
   };
   const list=getAgendaList(); list.unshift(item); setAgendaList(list);
   document.getElementById("inserirMacro").click();
-  updateAgendaList();
-  alert("Tarefa criada e comunicação inserida na descrição!");
+  updateAgendaList(); alert("Tarefa criada e comunicação inserida na descrição!");
 });
 
-/* Filtros/Export */
+/* Filtros agenda e export */
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
   document.getElementById(id).addEventListener("change",updateAgendaList);
 });
 document.getElementById("btnExport").addEventListener("click",exportCsv);
 
-/* === BOOT === */
+/* Scroll-to-top */
+const topBtn=document.getElementById("scrollTop");
+window.addEventListener("scroll",()=>{
+  topBtn.style.display = (window.scrollY>400) ? "flex" : "none";
+});
+topBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+
+/* Boot */
 (function boot(){
   document.getElementById("dataBase").value=state.dataBase;
   document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
+  /* pré-popula analistas no datalist/filtro */
+  populateAnalistasFilter(getAgendaList());
   updateEtapas(); refreshAll();
-
-  /* Pré-popula datalist de analistas fixos na primeira carga */
-  const dl=document.getElementById("analistasList");
-  dl.innerHTML = FIXED_ANALYSTS.map(n=>`<option value="${n}"></option>`).join("");
 })();
 </script>
 </body>
