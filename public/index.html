@@ -14,6 +14,7 @@
     html,body{ height:100%; }
     body{ margin:0; background:var(--slate-100); color:#0b1220; overflow-y:auto; }
 
+    /* Página base (fora do painel) */
     .page{
       max-width:1100px; margin:20px auto 140px auto; background:#fff;
       border:1px solid var(--slate-200); border-radius:14px; overflow:hidden;
@@ -35,21 +36,44 @@
     .btn.white{ background:#fff; color:#111827; }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Panel */
-    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; }
-    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
-    .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px; }
-    .panel .body{ padding:12px; background:#fff; }
-    .tabs{ display:flex; gap:8px; margin-bottom:8px; }
-    .tab{ padding:7px 12px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+    /* Painel (modal) */
+    .panel{
+      position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px;
+      display:none; z-index:10000; max-height:80vh;
+    }
+    .panel .wrap{
+      background:#fff; border:1px solid var(--slate-200); border-radius:14px;
+      box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden;
+    }
+    /* Cabeçalho do painel sempre visível */
+    .panel .hdr{
+      position:sticky; top:0; z-index:1;
+      display:flex; align-items:center; gap:8px; padding:10px 12px;
+      background:#0f172a; color:#fff; font-weight:800; font-size:13px;
+      border-bottom:1px solid #00000033;
+    }
+    /* Corpo do painel rola internamente */
+    .panel .body{
+      padding:12px; background:#fff;
+      max-height:calc(80vh - 56px); /* 56px ≈ altura do hdr */
+      overflow:auto;
+    }
+
+    /* Tabs compactas */
+    .tabs{ display:flex; gap:6px; margin:8px 0 10px; flex-wrap:wrap; }
+    .tab{
+      padding:6px 10px; border:1px solid var(--slate-200); border-radius:999px;
+      background:#fff; font-weight:700; font-size:12px; cursor:pointer;
+    }
     .tab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
 
+    /* Form */
     .grid{ display:grid; gap:10px; }
     .grid-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     .grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
     .card{ border:1px solid var(--slate-200); border-radius:12px; padding:10px; background:#fff; color:#0b1220; }
     .input, .select{ width:100%; border:1px solid var(--slate-200); border-radius:10px; padding:8px 10px; font-size:12px; }
-    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:130px; }
+    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:160px; }
 
     .muted{ color:#6b7280; font-size:12px; }
     .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
@@ -67,31 +91,6 @@
       border-color:#ef4444 !important;
       box-shadow:0 0 0 3px rgba(239,68,68,.15);
     }
-
-    /* ====== NOVOS AJUSTES PARA CABER NA TELA ====== */
-    .panel .wrap{
-      max-height:80vh;               /* ocupa até 80% da altura da janela */
-      display:flex;
-      flex-direction:column;
-    }
-    .panel .hdr{
-      position:sticky; top:0; z-index:3; /* cabeçalho sempre visível */
-    }
-    .panel .body{
-      overflow:auto;                 /* conteúdo interno rola */
-      padding:12px;
-      background:#fff;
-    }
-    .tabs{
-      position:sticky; top:0; z-index:2; /* abas sempre visíveis */
-      background:#fff;
-      padding-top:6px; padding-bottom:6px;
-      margin-bottom:8px;
-      border-bottom:1px solid var(--slate-200);
-    }
-    /* caixa de macro mais compacta em telas mais baixas */
-    @media (max-height: 820px){ .mono{ height:110px; } }
-    @media (max-height: 700px){ .mono{ height:90px; } }
   </style>
 </head>
 <body>
@@ -340,14 +339,24 @@ function overdueInfo(due){
   return today.getTime()>d.getTime();
 }
 
-/* ========= API HELPERS ========= */
-async function apiFetch(url, opts={}) {
-  const res = await fetch(url, { headers:{'content-type':'application/json'}, ...opts });
+/* ========= API HELPERS (robusto) ========= */
+async function apiFetch(url, opts = {}) {
+  const res  = await fetch(url, { headers: { 'content-type': 'application/json' }, ...opts });
+  const text = await res.text();
+
+  let data;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
   if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || res.statusText);
+    const msg = (data && data.error) || text || res.statusText;
+    throw new Error(msg);
   }
-  return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
+
+  if (data && typeof data === 'object' && !Array.isArray(data) && 'ok' in data && data.ok === false) {
+    throw new Error(data.error || 'Falha na API');
+  }
+
+  return data;
 }
 const apiGet    = (url)       => apiFetch(url);
 const apiPost   = (url, body) => apiFetch(url, { method:'POST', body: JSON.stringify(body) });
@@ -456,7 +465,7 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
-/* Criar tarefa – agora via API (POST /api/tickets) */
+/* Criar tarefa – via API (POST /api/tickets) */
 document.getElementById("criarTarefa").addEventListener("click", async () => {
   try {
     const ticket   = (document.getElementById("linkTicket").value || "").trim();
@@ -491,7 +500,7 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
 });
 
 /* ===================== AGENDA (GET + DELETE) ===================== */
-async function updateAgendaList(forceFromServer=false){
+async function updateAgendaList(forceServer=false){
   const filtro = document.getElementById("filtroData").value || new Date().toISOString().slice(0,10);
   const etapa  = document.getElementById("filtroTipo").value || "";
   const anal   = document.getElementById("filtroAnalista").value || "";
@@ -505,13 +514,17 @@ async function updateAgendaList(forceFromServer=false){
     q.set("date", filtro);
     if (etapa) q.set("etapa", etapa);
     if (anal)  q.set("analista", anal);
-    const items = await apiGet(`/api/tickets?${q.toString()}`);
+
+    const itemsResp = await apiGet(`/api/tickets?${q.toString()}`);
+    if (!Array.isArray(itemsResp)) {
+      throw new Error((itemsResp && itemsResp.error) || 'Resposta inesperada da API');
+    }
+    const items = itemsResp;
 
     const names = Array.from(new Set(items.map(t => t.analista).filter(Boolean))).sort();
     const selAnal = document.getElementById("filtroAnalista");
     const cur = selAnal.value;
     selAnal.innerHTML = `<option value="">Todos</option>` + names.map(n => `<option ${cur===n?'selected':''}>${n}</option>`).join("");
-
     // datalist do formulário de criação
     const dl = document.getElementById("analistasList");
     const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
@@ -576,6 +589,7 @@ function exportCsv(){
   if (anal)  q.set("analista", anal);
 
   apiGet(`/api/tickets?${q.toString()}`).then(items=>{
+    if (!Array.isArray(items)) throw new Error('Resposta inesperada da API');
     const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
     const rows=items.map(t=>[
       t.id, t.cliente, t.etapa, t.risco, fmt(new Date(t.due)),
