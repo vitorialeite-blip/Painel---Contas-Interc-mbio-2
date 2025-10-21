@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Painel de Comunicações — Octa</title>
   <style>
     :root{
@@ -12,21 +12,19 @@
     }
     *{ box-sizing:border-box; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
     html,body{ height:100%; }
-    body{ margin:0; background:var(--slate-100); color:#0b1220; overflow:auto; }
+    body{ margin:0; background:var(--slate-100); color:#0b1220; overflow-y:auto; }
 
-    /* Página simulada do Octa */
     .page{
-      max-width:1100px; margin:20px auto 140px auto; background:#fff; border:1px solid var(--slate-200);
-      border-radius:14px; overflow:hidden; box-shadow:0 12px 34px rgba(16,24,40,.08);
+      max-width:1100px; margin:20px auto 140px auto; background:#fff;
+      border:1px solid var(--slate-200); border-radius:14px; overflow:hidden;
+      box-shadow:0 12px 34px rgba(16,24,40,.08);
     }
     .bar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0f172a; color:#fff; }
     .content{ padding:16px; }
     .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
-    .textarea{
-      margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical;
-    }
+    .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
 
-    /* Footer fixo com o botão */
+    /* Footer */
     .footer{
       position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
       background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
@@ -35,25 +33,13 @@
     .footer-inner{ display:flex; justify-content:flex-end; gap:10px; padding:12px 16px; }
     .btn{ border:0; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
     .btn.white{ background:#fff; color:#111827; }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* PAINEL (agora com rolagem interna) */
-    .panel{
-      position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000;
-      max-height:calc(100vh - 120px); /* não ultrapassa a tela */
-    }
-    .panel .wrap{
-      background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden;
-      display:flex; flex-direction:column; max-height:inherit;
-    }
-    .panel .hdr{
-      display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px;
-      position:sticky; top:0; z-index:1; /* cabeçalho sempre visível enquanto rola */
-    }
-    .panel .body{
-      padding:12px; background:#fff;
-      flex:1 1 auto; overflow:auto; max-height:calc(100vh - 160px);
-    }
-
+    /* Panel */
+    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; }
+    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
+    .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px; }
+    .panel .body{ padding:12px; background:#fff; }
     .tabs{ display:flex; gap:8px; margin-bottom:8px; }
     .tab{ padding:7px 12px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
     .tab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
@@ -61,7 +47,6 @@
     .grid{ display:grid; gap:10px; }
     .grid-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     .grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
-
     .card{ border:1px solid var(--slate-200); border-radius:12px; padding:10px; background:#fff; color:#0b1220; }
     .input, .select{ width:100%; border:1px solid var(--slate-200); border-radius:10px; padding:8px 10px; font-size:12px; }
     .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:160px; }
@@ -76,13 +61,15 @@
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
 
-    @media (max-width:1150px){
-      .page, .footer, .panel{ width:96vw; }
+    /* obrigatórios (visual) */
+    .req::after{ content:" *"; color:#ef4444; font-weight:800; }
+    .input.error, .select.error {
+      border-color:#ef4444 !important;
+      box-shadow:0 0 0 3px rgba(239,68,68,.15);
     }
   </style>
 </head>
 <body>
-  <!-- Simulação do formulário do Octa -->
   <div class="page">
     <div class="bar">
       <div><b>Novo Ticket</b> • Formulário Oficial</div>
@@ -94,14 +81,12 @@
     </div>
   </div>
 
-  <!-- Rodapé com botão -->
   <div class="footer">
     <div class="footer-inner">
       <button class="btn white" id="btn-macros">MACROS</button>
     </div>
   </div>
 
-  <!-- Painel -->
   <div class="panel" id="panel">
     <div class="wrap">
       <div class="hdr">🧩 Painel — Comunicações • Agendados • Agenda</div>
@@ -124,27 +109,38 @@
             <label class="label">Etapa
               <select class="select" id="etapa"></select>
             </label>
-            <label class="label">Responsável na Loja
+
+            <label class="label req">Responsável na Loja
               <input class="input" id="responsavel" placeholder="Nome da pessoa responsável na loja (ou nome da loja)">
             </label>
-            <label class="label">Loja
+            <label class="label req">Loja
               <input class="input" id="loja" placeholder="Nome da loja">
             </label>
-            <label class="label">CNPJ
+            <label class="label req">CNPJ
               <input class="input" id="cnpj" placeholder="00.000.000/0000-00">
             </label>
-            <label class="label">Plataforma
-              <input class="input" id="plataforma" value="VINDI" readonly />
+            <label class="label req">Plataforma
+              <input class="input" id="plataforma" value="VINDI" readonly>
             </label>
-            <label class="label" style="grid-column:1/-1">Produto irregular
+
+            <label class="label req" style="grid-column:1/-1">Produto irregular
               <input class="input" id="produto" placeholder="Descrição do produto">
             </label>
           </div>
 
           <div class="grid grid-3" style="margin-top:10px;">
-            <div class="card"><div class="muted">Prazo sugerido</div><div id="prazo" style="font-weight:700;color:#0b1220;">—</div></div>
-            <div class="card"><div class="muted">Data base</div><input type="date" class="input" id="dataBase"></div>
-            <div class="card"><div class="muted">Data limite</div><div id="dataLimite" style="font-weight:700;color:#0b1220;">—</div></div>
+            <div class="card">
+              <div class="muted">Prazo sugerido</div>
+              <div id="prazo" style="font-weight:700;color:#0b1220;">—</div>
+            </div>
+            <div class="card">
+              <label class="label req" for="dataBase" style="margin:0">Data base</label>
+              <input type="date" class="input" id="dataBase">
+            </div>
+            <div class="card">
+              <div class="muted">Data limite</div>
+              <div id="dataLimite" style="font-weight:700;color:#0b1220;">—</div>
+            </div>
           </div>
 
           <div class="card" style="background:#fff; margin-top:10px;">
@@ -170,12 +166,17 @@
             <div><b>Próxima ação:</b> <span id="viewAcao">—</span></div>
           </div>
           <div class="grid grid-2" style="margin-top:10px;">
-            <label class="label">Link do ticket (Octadesk) — <span class="muted">obrigatório</span>
+            <label class="label req">Link do ticket (Octadesk)
               <input class="input" id="linkTicket" placeholder="https://octadesk.com/...">
             </label>
-            <label class="label">Analista (selecione ou digite) — <span class="muted">obrigatório</span>
+            <label class="label req">Analista (selecione ou digite)
               <input class="input" id="analistaAg" list="analistasList" placeholder="Ex.: SILVÉRIA COSTA">
-              <datalist id="analistasList"></datalist>
+              <datalist id="analistasList">
+                <option value="SILVÉRIA COSTA"></option>
+                <option value="IGOR ARAUJO"></option>
+                <option value="DIEGO RIBEIRO"></option>
+                <option value="RAFAEL CORONA"></option>
+              </datalist>
             </label>
           </div>
           <div style="margin-top:8px;">
@@ -214,7 +215,7 @@
   </div>
 
 <script>
-/* ======== Dados e Templates ======== */
+/* ===================== REGRAS / MACROS ===================== */
 const FLOWS = {
   "Médio & Baixo": [
     { etapa:"Comunicação Inicial", prazoUteis:10, proximaAcao:"Enviar Aviso 1 se não houver resposta", sugProxEtapa:"Aviso 1" },
@@ -279,13 +280,7 @@ Permanecemos à disposição para esclarecimentos formais.
 Atenciosamente,` },
 };
 
-const ANALYSTS = [
-  "SILVÉRIA COSTA",
-  "IGOR ARAUJO",
-  "DIEGO RIBEIRO",
-  "RAFAEL CORONA"
-];
-
+/* ===================== ESTADO / FUNÇÕES ===================== */
 const state = {
   risco:"Médio & Baixo",
   etapa:"Comunicação Inicial",
@@ -294,7 +289,6 @@ const state = {
 };
 const agendaStoreKey = "octa_agenda_html";
 
-/* ======== Util ======== */
 function addBusinessDays(baseDate, businessDays){
   const date = new Date(baseDate); let added=0;
   while(added<businessDays){
@@ -311,7 +305,7 @@ function fillTemplate(t){
   return t.replaceAll("{{RESPONSAVEL}}", state.responsavel||"<RESPONSÁVEL>")
     .replaceAll("{{LOJA}}", state.loja||"<LOJA>")
     .replaceAll("{{CNPJ}}", state.cnpj||"<CNPJ>")
-    .replaceAll("{{PLATAFORMA}}", "VINDI")
+    .replaceAll("{{PLATAFORMA}}", state.plataforma||"<PLATAFORMA>")
     .replaceAll("{{PRODUTO}}", state.produto||"<PRODUTO>")
     .replaceAll("{{DATA_LIMITE}}", limite)
     .replaceAll("{{DATA_DESC}}", fmt(new Date()));
@@ -322,7 +316,6 @@ function overdueInfo(due){
   return today.getTime()>d.getTime();
 }
 
-/* ======== UI Refresh ======== */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -356,32 +349,24 @@ function refreshCommon(){
 }
 function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(); }
 
-/* ======== Agenda (LocalStorage) ======== */
+/* ========= LocalStorage Agenda ========= */
 function getAgendaList(){ return JSON.parse(localStorage.getItem(agendaStoreKey)||"[]"); }
 function setAgendaList(list){ localStorage.setItem(agendaStoreKey, JSON.stringify(list)); }
-
 function populateAnalistasFilter(list){
   const select=document.getElementById("filtroAnalista");
   const cur=select.value;
-  const dynamicNames=Array.from(new Set(list.map(t=>t.analista).filter(Boolean)));
-  const names=Array.from(new Set([...ANALYSTS, ...dynamicNames])).sort();
+  const names=Array.from(new Set(list.map(t=>t.analista).filter(Boolean))).sort();
   select.innerHTML=`<option value="">Todos</option>`+names.map(n=>`<option ${cur===n?'selected':''}>${n}</option>`).join("");
-
   const dl=document.getElementById("analistasList");
-  dl.innerHTML=names.map(n=>`<option value="${n}"></option>`).join("");
+  // mantém os defaults e adiciona os do histórico
+  const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
+  const merged = Array.from(new Set([...defaults, ...names]));
+  dl.innerHTML = merged.map(n=>`<option value="${n}"></option>`).join("");
 }
-
 function filteredItemsForDay(list,alvo,tipo,analista){
   const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
-  return list.filter(t=>{
-    const d=new Date(t.due);
-    if(!same(d))return false;
-    if(tipo&&t.etapa!==tipo)return false;
-    if(analista&&t.analista!==analista)return false;
-    return true;
-  });
+  return list.filter(t=>{const d=new Date(t.due);if(!same(d))return false;if(tipo&&t.etapa!==tipo)return false;if(analista&&t.analista!==analista)return false;return true});
 }
-
 function updateAgendaList(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
   const alvo=new Date(filtro);
@@ -398,9 +383,7 @@ function updateAgendaList(){
   const byEtapa={};
   list.filter(t=>same(new Date(t.due))).forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
   const chips=document.getElementById("resumoChips");
-  chips.innerHTML=Object.keys(byEtapa).length?
-    Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join(""):
-    `<span class="muted">Sem comunicações neste dia.</span>`;
+  chips.innerHTML=Object.keys(byEtapa).length?Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join(""):`<span class="muted">Sem comunicações neste dia.</span>`;
 
   const itens=filteredItemsForDay(list,alvo,tipo,analista);
   if(itens.length===0){
@@ -426,7 +409,6 @@ function updateAgendaList(){
   }
   document.getElementById("totalAgenda").textContent="Total salvas: "+list.length;
 }
-
 function exportCsv(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
   const alvo=new Date(filtro);
@@ -437,30 +419,42 @@ function exportCsv(){
   const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
   const rows=itens.map(t=>[t.id,t.cliente,t.etapa,t.risco,fmt(new Date(t.due)),t.analista||"",t.obs||"",t.ticket||"",overdueInfo(t.due)?"VENCIDO":"No prazo"]);
   const csv=[headers,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const url=URL.createObjectURL(blob); const a=document.createElement("a");
-  a.href=url; a.download=`agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analista?("_"+analista.replaceAll(" ","_")):""}.csv`;
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=`agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analista?("_"+analista.replaceAll(" ","_")):""}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-/* ======== Eventos ======== */
+/* ===================== VALIDAÇÕES ===================== */
+function clearErrors(ids){ ids.forEach(id => document.getElementById(id)?.classList.remove('error')); }
+function markError(id){ const el=document.getElementById(id); if(el) el.classList.add('error'); }
+function isCNPJ(val){ const digits=(val||"").replace(/\D/g,''); return /^\d{14}$/.test(digits); }
+
+function validateComunicacao(){
+  const req = [
+    {id:'responsavel', label:'Responsável na Loja', test:v=>v.trim().length>1},
+    {id:'loja',        label:'Loja',                 test:v=>v.trim().length>1},
+    {id:'cnpj',        label:'CNPJ',                 test:isCNPJ},
+    {id:'plataforma',  label:'Plataforma',           test:v=>v.trim().length>0},
+    {id:'produto',     label:'Produto irregular',    test:v=>v.trim().length>1},
+    {id:'dataBase',    label:'Data base',            test:v=>!!v}
+  ];
+  clearErrors(req.map(r=>r.id));
+  const fails=[];
+  req.forEach(r=>{ const v=document.getElementById(r.id)?.value ?? ""; if(!r.test(v)) { markError(r.id); fails.push(r.label);} });
+  if(fails.length){ alert("Preencha os campos obrigatórios:\n- "+fails.join("\n- ")); return false; }
+  return true;
+}
+
+/* ===================== UI HANDLERS ===================== */
 document.getElementById("btn-macros").addEventListener("click",(e)=>{
   e.stopPropagation();
   const p=document.getElementById("panel");
-  const isOpen = p.style.display==="block";
-  p.style.display = isOpen ? "none" : "block";
-  if (!isOpen) {
-    // ao abrir, garante que o corpo do painel está no topo
-    const bodyEl = p.querySelector(".body");
-    if (bodyEl) bodyEl.scrollTop = 0;
-  }
+  p.style.display=(p.style.display==="block")?"none":"block";
 });
-
 document.addEventListener("click",(e)=>{
   const p=document.getElementById("panel"); const b=document.getElementById("btn-macros");
   if(!(p.contains(e.target)||b.contains(e.target))) p.style.display="none";
 });
-
 document.querySelectorAll(".tab").forEach(t=>{
   t.addEventListener("click",(e)=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -471,12 +465,11 @@ document.querySelectorAll(".tab").forEach(t=>{
     document.getElementById("tab-agenda").style.display=key==="agenda"?"block":"none";
   });
 });
-
 document.getElementById("risco").addEventListener("change",(e)=>{
   state.risco=e.target.value; state.etapa=FLOWS[state.risco][0].etapa; updateEtapas(); refreshAll();
 });
 document.getElementById("etapa").addEventListener("change",(e)=>{ state.etapa=e.target.value; refreshAll(); });
-["responsavel","loja","cnpj","produto"].forEach(id=>{
+["responsavel","loja","cnpj","plataforma","produto"].forEach(id=>{
   document.getElementById(id).addEventListener("input",(e)=>{ state[id]=e.target.value; refreshAll(); });
 });
 document.getElementById("dataBase").addEventListener("change",(e)=>{ state.dataBase=e.target.value; refreshAll(); });
@@ -485,27 +478,33 @@ document.getElementById("copiarMacro").addEventListener("click",()=>{
   navigator.clipboard?.writeText(document.getElementById("macroText").value);
   alert("Comunicação copiada!");
 });
+
+/* Inserir na descrição: valida -> insere -> fecha painel -> foca na descrição */
 document.getElementById("inserirMacro").addEventListener("click",()=>{
-  const ta=document.getElementById("desc"); const txt=document.getElementById("macroText").value;
+  if(!validateComunicacao()) return;
+  const ta=document.getElementById("desc");
+  const txt=document.getElementById("macroText").value;
   ta.value=(ta.value?ta.value+"\n\n":"")+txt;
+
+  const p=document.getElementById("panel");
+  p.style.display="none";
+
+  ta.scrollIntoView({behavior:"smooth", block:"start"});
+  setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
+/* Criar tarefa – exige link + analista */
 document.getElementById("criarTarefa").addEventListener("click",()=>{
-  const info=selectedInfo(); const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
   const ticket=(document.getElementById("linkTicket").value||"").trim();
   const analista=(document.getElementById("analistaAg").value||"").trim();
+  document.getElementById("linkTicket").classList.remove("error");
+  document.getElementById("analistaAg").classList.remove("error");
+  const falta=[];
+  if(!ticket){ falta.push("Link do ticket"); markError("linkTicket"); }
+  if(!analista){ falta.push("Analista"); markError("analistaAg"); }
+  if(falta.length){ alert("Preencha os campos obrigatórios:\n- "+falta.join("\n- ")); return; }
 
-  if(!ticket){
-    alert("Por favor, informe o link do ticket (obrigatório).");
-    document.getElementById("linkTicket").focus();
-    return;
-  }
-  if(!analista){
-    alert("Por favor, selecione ou digite o Analista (obrigatório).");
-    document.getElementById("analistaAg").focus();
-    return;
-  }
-
+  const info=selectedInfo(); const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
   const item={
     id:crypto.randomUUID(),
     titulo:info.sugProxEtapa?`Agendar próxima etapa: ${info.sugProxEtapa}`:`Revisar etapa: ${info.etapa}`,
@@ -518,9 +517,9 @@ document.getElementById("criarTarefa").addEventListener("click",()=>{
     analista
   };
   const list=getAgendaList(); list.unshift(item); setAgendaList(list);
-
-  document.getElementById("inserirMacro").click();
-  updateAgendaList(); alert("Tarefa criada e comunicação inserida na descrição!");
+  document.getElementById("inserirMacro").click(); // aproveita o fluxo de inserção/fechamento
+  updateAgendaList();
+  alert("Tarefa criada e comunicação inserida na descrição!");
 });
 
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
@@ -528,20 +527,10 @@ document.getElementById("criarTarefa").addEventListener("click",()=>{
 });
 document.getElementById("btnExport").addEventListener("click",exportCsv);
 
-/* ======== Boot ======== */
 (function boot(){
-  // campo plataforma sempre VINDI
-  document.getElementById("plataforma").value="VINDI";
-
-  // data default e filtros
   document.getElementById("dataBase").value=state.dataBase;
   document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
-
   updateEtapas(); refreshAll();
-
-  // popula datalist inicial com a lista fixa de analistas
-  const dl=document.getElementById("analistasList");
-  dl.innerHTML=ANALYSTS.map(n=>`<option value="${n}"></option>`).join("");
 })();
 </script>
 </body>
