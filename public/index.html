@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -60,14 +60,6 @@
     a.link{ color:#0b5fe0; text-decoration:none; } a.link:hover{ text-decoration:underline; }
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
-
-    /* botões de ação na lista (excluir) */
-    .item-actions{ display:flex; gap:6px; align-items:center; }
-    .icon-btn{
-      background:transparent; border:0; cursor:pointer; font-size:15px; line-height:1;
-      padding:4px; border-radius:8px;
-    }
-    .icon-btn:hover{ background:#f1f5f9; }
 
     /* obrigatórios (visual) */
     .req::after{ content:" *"; color:#ef4444; font-weight:800; }
@@ -323,7 +315,20 @@ function overdueInfo(due){
   return today.getTime()>d.getTime();
 }
 
-/* preencher etapas + macro + cartões superiores */
+/* ========= API HELPERS ========= */
+async function apiFetch(url, opts={}) {
+  const res = await fetch(url, { headers:{'content-type':'application/json'}, ...opts });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt || res.statusText);
+  }
+  return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
+}
+const apiGet    = (url)       => apiFetch(url);
+const apiPost   = (url, body) => apiFetch(url, { method:'POST', body: JSON.stringify(body) });
+const apiDelete = (url)       => apiFetch(url, { method:'DELETE' });
+
+/* ========= UI auxiliares ========= */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -355,140 +360,7 @@ function refreshCommon(){
 
   document.getElementById("viewAcao").textContent=info.proximaAcao;
 }
-function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(); }
-
-/* ========= Agenda via API (D1) ========= */
-const API_BASE = '/api/tickets';
-
-/* chamadas HTTP */
-async function apiCreate(item){
-  const r = await fetch(API_BASE, {
-    method: 'POST',
-    headers: {'content-type':'application/json'},
-    body: JSON.stringify(item)
-  });
-  if(!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-async function apiList({date, etapa, analista}){
-  const qs = new URLSearchParams();
-  if(date) qs.set('date', date);
-  if(etapa) qs.set('etapa', etapa);
-  if(analista) qs.set('analista', analista);
-  const r = await fetch(`${API_BASE}?${qs.toString()}`);
-  if(!r.ok) throw new Error(await r.text());
-  return r.json(); // array de tickets
-}
-async function apiDelete(id){
-  const r = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method:'DELETE' });
-  if(!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
-/* auxiliares visuais */
-function populateAnalistasFilter(list){
-  const select=document.getElementById("filtroAnalista");
-  const cur=select.value;
-  const names=Array.from(new Set(list.map(t=>t.analista).filter(Boolean))).sort();
-  select.innerHTML=`<option value="">Todos</option>`+names.map(n=>`<option ${cur===n?'selected':''}>${n}</option>`).join("");
-
-  const defaults=["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
-  const dl=document.getElementById("analistasList");
-  const merged=Array.from(new Set([...defaults, ...names]));
-  dl.innerHTML=merged.map(n=>`<option value="${n}"></option>`).join("");
-}
-
-/* renderização + filtros */
-async function updateAgendaList(){
-  const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
-  const tipo=document.getElementById("filtroTipo").value;
-  const analista=document.getElementById("filtroAnalista").value;
-
-  let list=[];
-  try{
-    list = await apiList({date:filtro, etapa: tipo||undefined, analista: analista||undefined});
-  }catch(e){
-    console.error(e);
-    alert("Erro ao carregar agenda do servidor.");
-    return;
-  }
-
-  populateAnalistasFilter(list);
-
-  const ui=document.getElementById("listaAgenda");
-  ui.innerHTML="";
-
-  // chips de resumo por etapa
-  const byEtapa={};
-  list.forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
-  const chips=document.getElementById("resumoChips");
-  chips.innerHTML=Object.keys(byEtapa).length
-    ? Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join("")
-    : `<span class="muted">Sem comunicações neste dia.</span>`;
-
-  if(list.length===0){
-    ui.innerHTML=`<div class="muted">Nenhuma tarefa para esta data.</div>`;
-  }else{
-    list.forEach(t=>{
-      const over = overdueInfo(new Date(t.due));
-      const venc = fmt(new Date(t.due));
-      const li=document.createElement("div");
-      li.className="card"; li.style.background="#fff";
-      li.innerHTML=`
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-          <div><b>${t.titulo||("Agendado: "+t.etapa)}</b> <span class="pill">${t.risco||""}</span></div>
-          <div class="item-actions">
-            <span class="${over?'badge-red':'badge'}">${over?'VENCIDO':(t.analista||"—")}</span>
-            <button class="icon-btn" title="Excluir" data-del="${t.id}">🗑️</button>
-          </div>
-        </div>
-        <div class="muted">Cliente: <b>${t.cliente||"—"}</b></div>
-        <div class="muted">Etapa: ${t.etapa} • Venc.: <b class="${over?'due-red':''}">${venc}</b></div>
-        <div class="muted">Obs: ${t.obs||"—"}</div>
-        ${t.ticket_url?`<div><a class="link" href="${t.ticket_url}" target="_blank" rel="noopener">🔗 Abrir ticket</a></div>`:""}
-      `;
-      ui.appendChild(li);
-    });
-  }
-  document.getElementById("totalAgenda").textContent="Total salvas: "+list.length;
-}
-
-/* export com base na lista atual */
-async function exportCsv(){
-  const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
-  const tipo=document.getElementById("filtroTipo").value;
-  const analista=document.getElementById("filtroAnalista").value;
-  let itens=[];
-  try{
-    itens = await apiList({date:filtro, etapa: tipo||undefined, analista: analista||undefined});
-  }catch(e){ console.error(e); alert("Erro ao exportar."); return; }
-
-  const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
-  const rows=itens.map(t=>[
-    t.id,t.cliente||"",t.etapa||"",t.risco||"",
-    fmt(new Date(t.due)),t.analista||"",t.obs||"",t.ticket_url||"",
-    overdueInfo(new Date(t.due))?"VENCIDO":"No prazo"
-  ]);
-  const csv=[headers,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download=`agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analista?("_"+analista.replaceAll(" ","_")):""}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-
-/* delegação de evento para exclusão */
-document.getElementById("listaAgenda").addEventListener("click", async (e)=>{
-  const btn = e.target.closest('[data-del]');
-  if(!btn) return;
-  const id = btn.getAttribute('data-del');
-  if(!confirm("Excluir este ticket da agenda?")) return;
-  try{
-    await apiDelete(id);
-    await updateAgendaList();
-  }catch(err){
-    console.error(err);
-    alert("Não foi possível excluir. Veja logs.");
-  }
-});
+function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(true); }
 
 /* ===================== VALIDAÇÕES ===================== */
 function clearErrors(ids){ ids.forEach(id => document.getElementById(id)?.classList.remove('error')); }
@@ -559,45 +431,143 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
-/* Criar tarefa – exige link + analista (salvando no D1) */
-document.getElementById("criarTarefa").addEventListener("click", async ()=>{
-  const ticket=(document.getElementById("linkTicket").value||"").trim();
-  const analista=(document.getElementById("analistaAg").value||"").trim();
-  document.getElementById("linkTicket").classList.remove("error");
-  document.getElementById("analistaAg").classList.remove("error");
-  const falta=[];
-  if(!ticket){ falta.push("Link do ticket"); markError("linkTicket"); }
-  if(!analista){ falta.push("Analista"); markError("analistaAg"); }
-  if(falta.length){ alert("Preencha os campos obrigatórios:\n- "+falta.join("\n- ")); return; }
+/* Criar tarefa – agora via API (POST /api/tickets) */
+document.getElementById("criarTarefa").addEventListener("click", async () => {
+  try {
+    const ticket   = (document.getElementById("linkTicket").value || "").trim();
+    const analista = (document.getElementById("analistaAg").value || "").trim();
+    document.getElementById("linkTicket").classList.remove("error");
+    document.getElementById("analistaAg").classList.remove("error");
+    const falta = [];
+    if (!ticket)   { falta.push("Link do ticket"); document.getElementById("linkTicket").classList.add("error"); }
+    if (!analista) { falta.push("Analista");       document.getElementById("analistaAg").classList.add("error"); }
+    if (falta.length) { alert("Preencha os campos obrigatórios:\n- " + falta.join("\n- ")); return; }
 
-  const info=selectedInfo();
-  const dueDate=addBusinessDays(state.dataBase,info.prazoUteis||0);
-  const dueStr = new Date(dueDate).toISOString().slice(0,10);
+    const info   = selectedInfo();
+    const payload = {
+      cliente   : state.loja || "<LOJA>",
+      etapa     : info.etapa,
+      risco     : state.risco,
+      due       : state.dataBase,      // yyyy-mm-dd
+      analista  : analista,
+      obs       : info.proximaAcao,
+      ticket_url: ticket
+    };
 
-  const payload={
-    titulo: info.sugProxEtapa?`Agendar próxima etapa: ${info.sugProxEtapa}`:`Revisar etapa: ${info.etapa}`,
-    cliente: state.loja || "<LOJA>",
-    etapa: info.etapa,
-    risco: state.risco,
-    due: dueStr,            // ISO (YYYY-MM-DD)
-    obs: info.proximaAcao,
-    ticket_url: ticket,
-    analista
-  };
+    await apiPost("/api/tickets", payload);
 
-  try{
-    await apiCreate(payload);
-    document.getElementById("inserirMacro").click(); // fecha painel e insere comunicação
-    await updateAgendaList();
-    alert("Tarefa criada e comunicação inserida na descrição!");
-  }catch(err){
+    document.getElementById("inserirMacro").click();
+    await updateAgendaList(true);
+    alert("Tarefa criada com sucesso!");
+  } catch (err) {
     console.error(err);
-    alert("Não foi possível criar a tarefa. Veja logs.");
+    alert("Não foi possível criar a tarefa. Veja logs.\n" + err.message);
   }
 });
 
+/* ===================== AGENDA (GET + DELETE) ===================== */
+async function updateAgendaList(forceFromServer=false){
+  const filtro = document.getElementById("filtroData").value || new Date().toISOString().slice(0,10);
+  const etapa  = document.getElementById("filtroTipo").value || "";
+  const anal   = document.getElementById("filtroAnalista").value || "";
+
+  const ui     = document.getElementById("listaAgenda");
+  const chips  = document.getElementById("resumoChips");
+  ui.innerHTML = `<div class="muted">Carregando…</div>`;
+
+  try {
+    const q = new URLSearchParams();
+    q.set("date", filtro);
+    if (etapa) q.set("etapa", etapa);
+    if (anal)  q.set("analista", anal);
+    const items = await apiGet(`/api/tickets?${q.toString()}`);
+
+    const names = Array.from(new Set(items.map(t => t.analista).filter(Boolean))).sort();
+    const selAnal = document.getElementById("filtroAnalista");
+    const cur = selAnal.value;
+    selAnal.innerHTML = `<option value="">Todos</option>` + names.map(n => `<option ${cur===n?'selected':''}>${n}</option>`).join("");
+
+    // datalist do formulário de criação
+    const dl = document.getElementById("analistasList");
+    const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
+    const merged = Array.from(new Set([...defaults, ...names]));
+    dl.innerHTML = merged.map(n => `<option value="${n}"></option>`).join("");
+
+    const byEtapa = {};
+    items.forEach(t => { byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1; });
+    chips.innerHTML = Object.keys(byEtapa).length
+      ? Object.entries(byEtapa).map(([k,v]) => `<span class="chip">${k}: ${v}</span>`).join("")
+      : `<span class="muted">Sem comunicações neste dia.</span>`;
+
+    if (!items.length){
+      ui.innerHTML = `<div class="muted">Nenhuma tarefa para esta data.</div>`;
+    } else {
+      ui.innerHTML = "";
+      items.forEach(t => {
+        const over = overdueInfo(t.due);
+        const venc = fmt(new Date(t.due));
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.background = "#fff";
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <div><b>${t.cliente}</b> <span class="pill">${t.risco}</span></div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="${over?'badge-red':'badge'}">${over?'VENCIDO':(t.analista||"—")}</span>
+              <button class="btn" data-del="${t.id}" title="Excluir">🗑️</button>
+            </div>
+          </div>
+          <div class="muted">Etapa: ${t.etapa} • Venc.: <b class="${over?'due-red':''}">${venc}</b></div>
+          <div class="muted">Obs: ${t.obs||"—"}</div>
+          ${t.ticket_url ? `<div><a class="link" href="${t.ticket_url}" target="_blank" rel="noopener">🔗 Abrir ticket</a></div>` : ""}
+        `;
+        card.querySelector('[data-del]').addEventListener('click', async () => {
+          if (!confirm("Excluir este ticket?")) return;
+          try {
+            await apiDelete(`/api/tickets/${t.id}`);
+            await updateAgendaList(true);
+          } catch(e) {
+            alert("Erro ao excluir: " + e.message);
+          }
+        });
+        ui.appendChild(card);
+      });
+    }
+    document.getElementById("totalAgenda").textContent = "Total (servidor): " + items.length;
+  } catch (err) {
+    console.error(err);
+    ui.innerHTML = `<div class="muted">Falha ao carregar: ${err.message}</div>`;
+    alert("Erro ao carregar agenda do servidor.\n" + err.message);
+  }
+}
+
+function exportCsv(){
+  const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
+  const etapa=document.getElementById("filtroTipo").value;
+  const anal=document.getElementById("filtroAnalista").value;
+  const q = new URLSearchParams();
+  q.set("date", filtro);
+  if (etapa) q.set("etapa", etapa);
+  if (anal)  q.set("analista", anal);
+
+  apiGet(`/api/tickets?${q.toString()}`).then(items=>{
+    const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
+    const rows=items.map(t=>[
+      t.id, t.cliente, t.etapa, t.risco, fmt(new Date(t.due)),
+      t.analista||"", t.obs||"", t.ticket_url||"", (overdueInfo(t.due)?"VENCIDO":"No prazo")
+    ]);
+    const csv=[headers,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download=`agenda_${filtro}${etapa?("_"+etapa.replaceAll(" ","_")):""}${anal?("_"+anal.replaceAll(" ","_")):""}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }).catch(err=>{
+    alert("Falha ao exportar: "+err.message);
+  });
+}
+
+/* ===================== BOOT ===================== */
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
-  document.getElementById(id).addEventListener("change",updateAgendaList);
+  document.getElementById(id).addEventListener("change",()=>updateAgendaList(true));
 });
 document.getElementById("btnExport").addEventListener("click",exportCsv);
 
