@@ -1,75 +1,61 @@
-// functions/api/tickets.js
-// API de tickets (D1) — GET/POST. Binding: env.DB
+export async function onRequestGet(context) {
+  const url = new URL(context.request.url);
+  const date = url.searchParams.get("date"); // YYYY-MM-DD
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=UTF-8" },
-  });
-}
-
-// GET /api/tickets?date=YYYY-MM-DD&analista=...&etapa=...
-export async function onRequestGet({ env, request }) {
   try {
-    const url = new URL(request.url);
-    const date = url.searchParams.get("date");        // YYYY-MM-DD
-    const analista = url.searchParams.get("analista") || "";
-    const etapa = url.searchParams.get("etapa") || "";
-
-    // IMPORTANTE: use o nome da coluna do seu banco.
-    // Se você criou como "devido", mantenha "devido".
-    // Se criou como "due", troque aqui!
-    let sql = "SELECT * FROM tickets WHERE 1=1";
-    const params = [];
-
-    if (date)    { sql += " AND devido = ?";   params.push(date); }
-    if (analista){ sql += " AND analista = ?"; params.push(analista); }
-    if (etapa)   { sql += " AND etapa = ?";    params.push(etapa); }
-
-    sql += " ORDER BY devido ASC, created_at DESC";
-
-    const stmt = env.DB.prepare(sql);
-    const res = await stmt.bind(...params).all();
-
-    return json({ ok: true, rows: res.results || [] });
+    if (date) {
+      const { results } = await context.env.DB
+        .prepare("SELECT * FROM tickets WHERE date(due) = ? ORDER BY created_at DESC")
+        .bind(date)
+        .all();
+      return Response.json({ ok: true, items: results ?? [] });
+    } else {
+      const { results } = await context.env.DB
+        .prepare("SELECT * FROM tickets ORDER BY created_at DESC")
+        .all();
+      return Response.json({ ok: true, items: results ?? [] });
+    }
   } catch (err) {
-    return json({ ok: false, error: String(err) }, 500);
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 }
 
-// POST /api/tickets
-// Body JSON: { cliente, etapa, risco, devido, analista, obs, ticket_url, status? }
-export async function onRequestPost({ env, request }) {
+export async function onRequestPost(context) {
   try {
-    const body = await request.json();
+    const body = await context.request.json();
 
-    const required = ["cliente", "etapa", "risco", "devido", "analista"];
+    const required = ["cliente", "etapa", "risco", "due", "analista", "ticket_url"];
     for (const k of required) {
       if (!body[k] || String(body[k]).trim() === "") {
-        return json({ ok: false, error: `Campo obrigatório ausente: ${k}` }, 400);
+        return Response.json({ ok: false, error: `Campo obrigatório ausente: ${k}` }, { status: 400 });
       }
     }
 
-    const id        = crypto.randomUUID();
-    const cliente   = String(body.cliente).trim();
-    const etapa     = String(body.etapa).trim();
-    const risco     = String(body.risco).trim();
-    const devido    = String(body.devido).trim();  // YYYY-MM-DD
-    const analista  = String(body.analista).trim();
-    const obs       = (body.obs || "").toString();
-    const ticketUrl = (body.ticket_url || "").toString();
-    const status    = (body.status || "open").toString();
+    const id = crypto.randomUUID();
 
-    const sql = `
-      INSERT INTO tickets (id, cliente, etapa, risco, devido, analista, obs, ticket_url, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    await env.DB.prepare(sql)
-      .bind(id, cliente, etapa, risco, devido, analista, obs, ticketUrl, status)
-      .run();
+    const stmt = context.env.DB.prepare(
+      `INSERT INTO tickets (id, cliente, etapa, risco, due, analista, obs, ticket_url, status)
+       VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'open')`
+    ).bind(
+      id,
+      body.cliente,
+      body.etapa,
+      body.risco,
+      body.due,        // <<<<<< due (padronizado)
+      body.analista,
+      body.obs ?? "",
+      body.ticket_url
+    );
 
-    return json({ ok: true, id });
+    await stmt.run();
+    return Response.json({ ok: true, id });
   } catch (err) {
-    return json({ ok: false, error: String(err) }, 500);
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 }
