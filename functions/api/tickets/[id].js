@@ -1,22 +1,44 @@
-// functions/api/tickets/[id].js
-// DELETE /api/tickets/:id — remove item da agenda (D1)
+export async function onRequestDelete(context) {
+  const { params } = context;
+  const id = params.id;
 
-export async function onRequestDelete({ env, params }) {
   try {
-    const id = params.id || "";
-    if (!id) return new Response(JSON.stringify({ ok:false, error:"ID não informado" }), {
-      status: 400, headers: { "content-type": "application/json" }
-    });
-
-    const sql  = "DELETE FROM tickets WHERE id = ?";
-    const info = await env.DB.prepare(sql).bind(id).run();
-
-    return new Response(JSON.stringify({ ok: true, changes: info.meta?.changes || 0 }), {
-      headers: { "content-type": "application/json" }
-    });
+    await context.env.DB.prepare("DELETE FROM tickets WHERE id = ?").bind(id).run();
+    return Response.json({ ok: true });
   } catch (err) {
-    return new Response(JSON.stringify({ ok:false, error:String(err) }), {
-      status: 500, headers: { "content-type": "application/json" }
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
+}
+
+export async function onRequestPatch(context) {
+  const { params } = context;
+  const id = params.id;
+
+  try {
+    const body = await context.request.json();
+    const fields = [];
+    const values = [];
+
+    for (const [k, v] of Object.entries(body)) {
+      if (["cliente","etapa","risco","due","analista","obs","ticket_url","status"].includes(k)) {
+        fields.push(`${k} = ?`);
+        values.push(v);
+      }
+    }
+    if (!fields.length) return Response.json({ ok:false, error:"Nada para atualizar" }, { status:400 });
+
+    const sql = `UPDATE tickets SET ${fields.join(", ")} WHERE id = ?`;
+    values.push(id);
+
+    await context.env.DB.prepare(sql).bind(...values).run();
+    return Response.json({ ok: true });
+  } catch (err) {
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
     });
   }
 }
