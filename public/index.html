@@ -14,34 +14,33 @@
     html,body{ height:100%; }
     body{ margin:0; background:var(--slate-100); color:#0b1220; overflow-y:auto; }
 
-    .page{
-      max-width:1100px; margin:20px auto 140px auto; background:#fff;
+    .page{ max-width:1100px; margin:20px auto 140px auto; background:#fff;
       border:1px solid var(--slate-200); border-radius:14px; overflow:hidden;
-      box-shadow:0 12px 34px rgba(16,24,40,.08);
-    }
-    .bar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0f172a; color:#fff; }
+      box-shadow:0 12px 34px rgba(16,24,40,.08); }
+    .bar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px;
+      background:#0f172a; color:#fff; }
     .content{ padding:16px; }
     .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
-    .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
+    .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200);
+      border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
 
-    /* Footer */
-    .footer{
-      position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
+    .footer{ position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
       background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
-      border:1px solid #00000055; z-index:9999;
-    }
+      border:1px solid #00000055; z-index:9999; }
     .footer-inner{ display:flex; justify-content:flex-end; gap:10px; padding:12px 16px; }
     .btn{ border:0; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
     .btn.white{ background:#fff; color:#111827; }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Panel */
     .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; }
-    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
-    .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px; }
+    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px;
+      box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
+    .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a;
+      color:#fff; font-weight:800; font-size:13px; }
     .panel .body{ padding:12px; background:#fff; }
     .tabs{ display:flex; gap:8px; margin-bottom:8px; }
-    .tab{ padding:7px 12px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+    .tab{ padding:7px 12px; border:1px solid var(--slate-200); border-radius:999px; background:#fff;
+      font-weight:700; font-size:12px; cursor:pointer; }
     .tab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
 
     .grid{ display:grid; gap:10px; }
@@ -52,21 +51,20 @@
     .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; height:160px; }
 
     .muted{ color:#6b7280; font-size:12px; }
-    .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
+    .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3;
+      border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
     .badge{ background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490; padding:2px 6px; border-radius:999px; font-size:11px; }
-    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600); padding:2px 6px; border-radius:999px; font-size:11px; font-weight:800; }
+    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600);
+      padding:2px 6px; border-radius:999px; font-size:11px; font-weight:800; }
     .due-red{ color:var(--rose-600); font-weight:800; }
     .list{ max-height:260px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
     a.link{ color:#0b5fe0; text-decoration:none; } a.link:hover{ text-decoration:underline; }
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-    .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
+    .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px;
+      font-size:11px; font-weight:700; }
 
-    /* obrigatórios (visual) */
     .req::after{ content:" *"; color:#ef4444; font-weight:800; }
-    .input.error, .select.error {
-      border-color:#ef4444 !important;
-      box-shadow:0 0 0 3px rgba(239,68,68,.15);
-    }
+    .input.error, .select.error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15); }
   </style>
 </head>
 <body>
@@ -417,7 +415,7 @@ document.getElementById("copiarMacro").addEventListener("click",()=>{
   alert("Comunicação copiada!");
 });
 
-/* Inserir na descrição: valida -> insere -> fecha painel -> foca na descrição */
+/* Inserir na descrição */
 document.getElementById("inserirMacro").addEventListener("click",()=>{
   if(!validateComunicacao()) return;
   const ta=document.getElementById("desc");
@@ -431,7 +429,7 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
-/* Criar tarefa – agora via API (POST /api/tickets) */
+/* Criar tarefa – envia DUE como data limite (dias úteis) */
 document.getElementById("criarTarefa").addEventListener("click", async () => {
   try {
     const ticket   = (document.getElementById("linkTicket").value || "").trim();
@@ -443,12 +441,15 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
     if (!analista) { falta.push("Analista");       document.getElementById("analistaAg").classList.add("error"); }
     if (falta.length) { alert("Preencha os campos obrigatórios:\n- " + falta.join("\n- ")); return; }
 
-    const info   = selectedInfo();
+    const info    = selectedInfo();
+    const dueDate = addBusinessDays(state.dataBase, info.prazoUteis || 0);
+    const dueISO  = dueDate.toISOString().slice(0, 10);
+
     const payload = {
       cliente   : state.loja || "<LOJA>",
       etapa     : info.etapa,
       risco     : state.risco,
-      due       : state.dataBase,      // yyyy-mm-dd
+      due       : dueISO,            // data limite correta
       analista  : analista,
       obs       : info.proximaAcao,
       ticket_url: ticket
@@ -480,14 +481,15 @@ async function updateAgendaList(forceFromServer=false){
     q.set("date", filtro);
     if (etapa) q.set("etapa", etapa);
     if (anal)  q.set("analista", anal);
-    const items = await apiGet(`/api/tickets?${q.toString()}`);
+
+    // backend retorna { ok:true, items:[...] }
+    const { items } = await apiGet(`/api/tickets?${q.toString()}`);
 
     const names = Array.from(new Set(items.map(t => t.analista).filter(Boolean))).sort();
     const selAnal = document.getElementById("filtroAnalista");
     const cur = selAnal.value;
     selAnal.innerHTML = `<option value="">Todos</option>` + names.map(n => `<option ${cur===n?'selected':''}>${n}</option>`).join("");
 
-    // datalist do formulário de criação
     const dl = document.getElementById("analistasList");
     const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
     const merged = Array.from(new Set([...defaults, ...names]));
@@ -545,12 +547,13 @@ function exportCsv(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
   const etapa=document.getElementById("filtroTipo").value;
   const anal=document.getElementById("filtroAnalista").value;
+
   const q = new URLSearchParams();
   q.set("date", filtro);
   if (etapa) q.set("etapa", etapa);
   if (anal)  q.set("analista", anal);
 
-  apiGet(`/api/tickets?${q.toString()}`).then(items=>{
+  apiGet(`/api/tickets?${q.toString()}`).then(({ items })=>{
     const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
     const rows=items.map(t=>[
       t.id, t.cliente, t.etapa, t.risco, fmt(new Date(t.due)),
