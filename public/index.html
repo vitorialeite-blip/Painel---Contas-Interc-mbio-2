@@ -61,6 +61,14 @@
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
 
+    /* botões de ação na lista (excluir) */
+    .item-actions{ display:flex; gap:6px; align-items:center; }
+    .icon-btn{
+      background:transparent; border:0; cursor:pointer; font-size:15px; line-height:1;
+      padding:4px; border-radius:8px;
+    }
+    .icon-btn:hover{ background:#f1f5f9; }
+
     /* obrigatórios (visual) */
     .req::after{ content:" *"; color:#ef4444; font-weight:800; }
     .input.error, .select.error {
@@ -287,7 +295,6 @@ const state = {
   dataBase: new Date().toISOString().slice(0,10),
   responsavel:"", loja:"", cnpj:"", plataforma:"VINDI", produto:""
 };
-const agendaStoreKey = "octa_agenda_html";
 
 function addBusinessDays(baseDate, businessDays){
   const date = new Date(baseDate); let added=0;
@@ -316,6 +323,7 @@ function overdueInfo(due){
   return today.getTime()>d.getTime();
 }
 
+/* preencher etapas + macro + cartões superiores */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -349,80 +357,138 @@ function refreshCommon(){
 }
 function refreshAll(){ refreshCommon(); refreshMacro(); updateAgendaList(); }
 
-/* ========= LocalStorage Agenda ========= */
-function getAgendaList(){ return JSON.parse(localStorage.getItem(agendaStoreKey)||"[]"); }
-function setAgendaList(list){ localStorage.setItem(agendaStoreKey, JSON.stringify(list)); }
+/* ========= Agenda via API (D1) ========= */
+const API_BASE = '/api/tickets';
+
+/* chamadas HTTP */
+async function apiCreate(item){
+  const r = await fetch(API_BASE, {
+    method: 'POST',
+    headers: {'content-type':'application/json'},
+    body: JSON.stringify(item)
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function apiList({date, etapa, analista}){
+  const qs = new URLSearchParams();
+  if(date) qs.set('date', date);
+  if(etapa) qs.set('etapa', etapa);
+  if(analista) qs.set('analista', analista);
+  const r = await fetch(`${API_BASE}?${qs.toString()}`);
+  if(!r.ok) throw new Error(await r.text());
+  return r.json(); // array de tickets
+}
+async function apiDelete(id){
+  const r = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method:'DELETE' });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* auxiliares visuais */
 function populateAnalistasFilter(list){
   const select=document.getElementById("filtroAnalista");
   const cur=select.value;
   const names=Array.from(new Set(list.map(t=>t.analista).filter(Boolean))).sort();
   select.innerHTML=`<option value="">Todos</option>`+names.map(n=>`<option ${cur===n?'selected':''}>${n}</option>`).join("");
+
+  const defaults=["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
   const dl=document.getElementById("analistasList");
-  // mantém os defaults e adiciona os do histórico
-  const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
-  const merged = Array.from(new Set([...defaults, ...names]));
-  dl.innerHTML = merged.map(n=>`<option value="${n}"></option>`).join("");
+  const merged=Array.from(new Set([...defaults, ...names]));
+  dl.innerHTML=merged.map(n=>`<option value="${n}"></option>`).join("");
 }
-function filteredItemsForDay(list,alvo,tipo,analista){
-  const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
-  return list.filter(t=>{const d=new Date(t.due);if(!same(d))return false;if(tipo&&t.etapa!==tipo)return false;if(analista&&t.analista!==analista)return false;return true});
-}
-function updateAgendaList(){
+
+/* renderização + filtros */
+async function updateAgendaList(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
-  const alvo=new Date(filtro);
   const tipo=document.getElementById("filtroTipo").value;
   const analista=document.getElementById("filtroAnalista").value;
-  const list=getAgendaList();
+
+  let list=[];
+  try{
+    list = await apiList({date:filtro, etapa: tipo||undefined, analista: analista||undefined});
+  }catch(e){
+    console.error(e);
+    alert("Erro ao carregar agenda do servidor.");
+    return;
+  }
 
   populateAnalistasFilter(list);
 
   const ui=document.getElementById("listaAgenda");
   ui.innerHTML="";
 
-  const same=d=>d.getFullYear()===alvo.getFullYear()&&d.getMonth()===alvo.getMonth()&&d.getDate()===alvo.getDate();
+  // chips de resumo por etapa
   const byEtapa={};
-  list.filter(t=>same(new Date(t.due))).forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
+  list.forEach(t=>byEtapa[t.etapa]=(byEtapa[t.etapa]||0)+1);
   const chips=document.getElementById("resumoChips");
-  chips.innerHTML=Object.keys(byEtapa).length?Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join(""):`<span class="muted">Sem comunicações neste dia.</span>`;
+  chips.innerHTML=Object.keys(byEtapa).length
+    ? Object.entries(byEtapa).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join("")
+    : `<span class="muted">Sem comunicações neste dia.</span>`;
 
-  const itens=filteredItemsForDay(list,alvo,tipo,analista);
-  if(itens.length===0){
+  if(list.length===0){
     ui.innerHTML=`<div class="muted">Nenhuma tarefa para esta data.</div>`;
   }else{
-    itens.forEach(t=>{
+    list.forEach(t=>{
+      const over = overdueInfo(new Date(t.due));
+      const venc = fmt(new Date(t.due));
       const li=document.createElement("div");
       li.className="card"; li.style.background="#fff";
-      const over=overdueInfo(t.due);
-      const venc=fmt(new Date(t.due));
       li.innerHTML=`
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-          <div><b>${t.titulo}</b> <span class="pill">${t.risco}</span></div>
-          <span class="${over?'badge-red':'badge'}">${over?'VENCIDO':(t.analista||"—")}</span>
+          <div><b>${t.titulo||("Agendado: "+t.etapa)}</b> <span class="pill">${t.risco||""}</span></div>
+          <div class="item-actions">
+            <span class="${over?'badge-red':'badge'}">${over?'VENCIDO':(t.analista||"—")}</span>
+            <button class="icon-btn" title="Excluir" data-del="${t.id}">🗑️</button>
+          </div>
         </div>
-        <div class="muted">Cliente: <b>${t.cliente}</b></div>
+        <div class="muted">Cliente: <b>${t.cliente||"—"}</b></div>
         <div class="muted">Etapa: ${t.etapa} • Venc.: <b class="${over?'due-red':''}">${venc}</b></div>
         <div class="muted">Obs: ${t.obs||"—"}</div>
-        ${t.ticket?`<div><a class="link" href="${t.ticket}" target="_blank" rel="noopener">🔗 Abrir ticket</a></div>`:""}
+        ${t.ticket_url?`<div><a class="link" href="${t.ticket_url}" target="_blank" rel="noopener">🔗 Abrir ticket</a></div>`:""}
       `;
       ui.appendChild(li);
     });
   }
   document.getElementById("totalAgenda").textContent="Total salvas: "+list.length;
 }
-function exportCsv(){
+
+/* export com base na lista atual */
+async function exportCsv(){
   const filtro=document.getElementById("filtroData").value||new Date().toISOString().slice(0,10);
-  const alvo=new Date(filtro);
   const tipo=document.getElementById("filtroTipo").value;
   const analista=document.getElementById("filtroAnalista").value;
-  const list=getAgendaList();
-  const itens=filteredItemsForDay(list,alvo,tipo,analista);
+  let itens=[];
+  try{
+    itens = await apiList({date:filtro, etapa: tipo||undefined, analista: analista||undefined});
+  }catch(e){ console.error(e); alert("Erro ao exportar."); return; }
+
   const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
-  const rows=itens.map(t=>[t.id,t.cliente,t.etapa,t.risco,fmt(new Date(t.due)),t.analista||"",t.obs||"",t.ticket||"",overdueInfo(t.due)?"VENCIDO":"No prazo"]);
+  const rows=itens.map(t=>[
+    t.id,t.cliente||"",t.etapa||"",t.risco||"",
+    fmt(new Date(t.due)),t.analista||"",t.obs||"",t.ticket_url||"",
+    overdueInfo(new Date(t.due))?"VENCIDO":"No prazo"
+  ]);
   const csv=[headers,...rows].map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
   const a=document.createElement("a"); a.href=url; a.download=`agenda_${filtro}${tipo?("_"+tipo.replaceAll(" ","_")):""}${analista?("_"+analista.replaceAll(" ","_")):""}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
+
+/* delegação de evento para exclusão */
+document.getElementById("listaAgenda").addEventListener("click", async (e)=>{
+  const btn = e.target.closest('[data-del]');
+  if(!btn) return;
+  const id = btn.getAttribute('data-del');
+  if(!confirm("Excluir este ticket da agenda?")) return;
+  try{
+    await apiDelete(id);
+    await updateAgendaList();
+  }catch(err){
+    console.error(err);
+    alert("Não foi possível excluir. Veja logs.");
+  }
+});
 
 /* ===================== VALIDAÇÕES ===================== */
 function clearErrors(ids){ ids.forEach(id => document.getElementById(id)?.classList.remove('error')); }
@@ -493,8 +559,8 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
-/* Criar tarefa – exige link + analista */
-document.getElementById("criarTarefa").addEventListener("click",()=>{
+/* Criar tarefa – exige link + analista (salvando no D1) */
+document.getElementById("criarTarefa").addEventListener("click", async ()=>{
   const ticket=(document.getElementById("linkTicket").value||"").trim();
   const analista=(document.getElementById("analistaAg").value||"").trim();
   document.getElementById("linkTicket").classList.remove("error");
@@ -504,22 +570,30 @@ document.getElementById("criarTarefa").addEventListener("click",()=>{
   if(!analista){ falta.push("Analista"); markError("analistaAg"); }
   if(falta.length){ alert("Preencha os campos obrigatórios:\n- "+falta.join("\n- ")); return; }
 
-  const info=selectedInfo(); const due=addBusinessDays(state.dataBase,info.prazoUteis||0);
-  const item={
-    id:crypto.randomUUID(),
-    titulo:info.sugProxEtapa?`Agendar próxima etapa: ${info.sugProxEtapa}`:`Revisar etapa: ${info.etapa}`,
-    cliente:state.loja||"<LOJA>",
-    etapa:info.etapa,
-    due,
-    obs:info.proximaAcao,
-    risco:state.risco,
-    ticket,
+  const info=selectedInfo();
+  const dueDate=addBusinessDays(state.dataBase,info.prazoUteis||0);
+  const dueStr = new Date(dueDate).toISOString().slice(0,10);
+
+  const payload={
+    titulo: info.sugProxEtapa?`Agendar próxima etapa: ${info.sugProxEtapa}`:`Revisar etapa: ${info.etapa}`,
+    cliente: state.loja || "<LOJA>",
+    etapa: info.etapa,
+    risco: state.risco,
+    due: dueStr,            // ISO (YYYY-MM-DD)
+    obs: info.proximaAcao,
+    ticket_url: ticket,
     analista
   };
-  const list=getAgendaList(); list.unshift(item); setAgendaList(list);
-  document.getElementById("inserirMacro").click(); // aproveita o fluxo de inserção/fechamento
-  updateAgendaList();
-  alert("Tarefa criada e comunicação inserida na descrição!");
+
+  try{
+    await apiCreate(payload);
+    document.getElementById("inserirMacro").click(); // fecha painel e insere comunicação
+    await updateAgendaList();
+    alert("Tarefa criada e comunicação inserida na descrição!");
+  }catch(err){
+    console.error(err);
+    alert("Não foi possível criar a tarefa. Veja logs.");
+  }
 });
 
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
