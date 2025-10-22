@@ -9,11 +9,13 @@
       --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
       --slate-600:#475569; --slate-700:#334155; --slate-800:#1f2937; --slate-900:#0f172a;
       --rose-600:#e11d48; --rose-50:#fff1f2;
+      --brand:#0f172a;
     }
     *{ box-sizing:border-box; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
     html,body{ height:100%; }
     body{ margin:0; background:var(--slate-100); color:#0b1220; overflow-y:auto; }
 
+    /* página */
     .page{
       max-width:1100px; margin:20px auto 140px auto; background:#fff;
       border:1px solid var(--slate-200); border-radius:14px; overflow:hidden;
@@ -21,14 +23,18 @@
     }
     .bar{
       display:flex; align-items:center; justify-content:space-between;
-      padding:8px 12px; background:#0f172a; color:#fff;
-      font-size:13px; line-height:1;
+      padding:8px 12px; height:44px;           /* mais baixa p/ caber tudo */
+      background:var(--brand); color:#fff;
+      border-bottom:1px solid rgba(255,255,255,.1);
     }
-    .content{ padding:16px; }
-    .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
-    .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
+    .bar b{ font-size:13px; }
+    .bar small{ opacity:.8; }
 
-    /* Footer fixo */
+    .content{ padding:14px; }
+    .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
+    .textarea{ margin-top:8px; width:100%; height:46vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
+
+    /* Footer fixo com botão */
     .footer{
       position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
       background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
@@ -39,24 +45,21 @@
     .btn.white{ background:#fff; color:#111827; }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Painel (compacto) */
-    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:1100px; display:none; z-index:10000; }
+    /* Painel flutuante */
+    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:72px; width:1100px; display:none; z-index:10000; }
     .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
     .panel .hdr{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:8px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px;
+      display:flex; align-items:center; gap:8px; padding:8px 12px; height:40px;   /* compacto */
+      background:var(--brand); color:#fff; font-weight:800; font-size:13px;
     }
-    .panel .hdr .tabs{
-      display:flex; gap:6px; margin:0; overflow:auto; scrollbar-width:none;
-    }
-    .panel .hdr .tabs::-webkit-scrollbar{ display:none; }
-    .panel .hdr .tab{
-      padding:6px 10px; border:1px solid var(--slate-300); border-radius:999px; background:#0b1220; color:#e2e8f0;
-      font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap;
-    }
-    .panel .hdr .tab.active{ background:#22c55e; color:#0b1220; border-color:#22c55e; }
-    .panel .body{ padding:12px; background:#fff; max-height:66vh; overflow:auto; }
+    .panel .body{ padding:12px; background:#fff; }
 
+    /* abas */
+    .tabs{ display:flex; gap:8px; margin-bottom:10px; }
+    .tab{ padding:6px 10px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+    .tab.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+
+    /* cartões e campos */
     .grid{ display:grid; gap:10px; }
     .grid-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     .grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -67,8 +70,9 @@
     .muted{ color:#6b7280; font-size:12px; }
     .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
     .badge{ background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490; padding:2px 6px; border-radius:999px; font-size:11px; }
-    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600); padding:2px 6px; border-radius:999px; font-size:11px; font-weight:800; }
+    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600); padding:2px 6px; border-radius:999px; font-weight:800; }
     .due-red{ color:var(--rose-600); font-weight:800; }
+
     .list{ max-height:260px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
     a.link{ color:#0b5fe0; text-decoration:none; } a.link:hover{ text-decoration:underline; }
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
@@ -76,14 +80,7 @@
 
     /* obrigatórios (visual) */
     .req::after{ content:" *"; color:#ef4444; font-weight:800; }
-    .input.error, .select.error {
-      border-color:#ef4444 !important;
-      box-shadow:0 0 0 3px rgba(239,68,68,.15);
-    }
-
-    @media (max-width: 1200px){
-      .page,.footer,.panel{ width:95vw; }
-    }
+    .input.error, .select.error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15); }
   </style>
 </head>
 <body>
@@ -106,16 +103,14 @@
 
   <div class="panel" id="panel">
     <div class="wrap">
-      <div class="hdr">
-        <span>🧩 Painel — Comunicações • Agendados • Agenda</span>
+      <div class="hdr">🧩 Painel — Comunicações • Agendados • Agenda</div>
+      <div class="body">
         <div class="tabs">
           <button class="tab active" data-tab="comunicacoes">Comunicações</button>
           <button class="tab" data-tab="agendados">Agendados</button>
           <button class="tab" data-tab="agenda">Agenda</button>
         </div>
-      </div>
 
-      <div class="body">
         <!-- COMUNICAÇÕES -->
         <div id="tab-comunicacoes">
           <div class="grid grid-2">
@@ -190,12 +185,7 @@
             </label>
             <label class="label req">Analista (selecione ou digite)
               <input class="input" id="analistaAg" list="analistasList" placeholder="Ex.: SILVÉRIA COSTA">
-              <datalist id="analistasList">
-                <option value="SILVÉRIA COSTA"></option>
-                <option value="IGOR ARAUJO"></option>
-                <option value="DIEGO RIBEIRO"></option>
-                <option value="RAFAEL CORONA"></option>
-              </datalist>
+              <datalist id="analistasList"></datalist>
             </label>
           </div>
           <div style="margin-top:8px;">
@@ -299,6 +289,14 @@ Permanecemos à disposição para esclarecimentos formais.
 Atenciosamente,` },
 };
 
+/* analistas padrão — sempre presentes nas listas */
+const DEFAULT_ANALYSTS = [
+  "SILVÉRIA COSTA",
+  "IGOR ARAUJO",
+  "DIEGO RIBEIRO",
+  "RAFAEL CORONA",
+];
+
 /* ===================== ESTADO / FUNÇÕES ===================== */
 const state = {
   risco:"Médio & Baixo",
@@ -327,12 +325,6 @@ function fillTemplate(t){
     .replaceAll("{{PRODUTO}}", state.produto||"<PRODUTO>")
     .replaceAll("{{DATA_LIMITE}}", limite)
     .replaceAll("{{DATA_DESC}}", fmt(new Date()));
-}
-/* due ISO exatamente igual ao “Vencimento” mostrado */
-function computeDueISO(){
-  const info = selectedInfo();
-  const due = addBusinessDays(state.dataBase, info.prazoUteis||0);
-  return due.toISOString().slice(0,10);
 }
 function overdueInfo(due){
   const today=new Date(); today.setHours(0,0,0,0);
@@ -456,13 +448,11 @@ document.getElementById("inserirMacro").addEventListener("click",()=>{
   setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
 });
 
-/* Criar tarefa – POST /api/tickets  */
+/* Criar tarefa – via API (POST /api/tickets) e limpar campos */
 document.getElementById("criarTarefa").addEventListener("click", async () => {
   try {
     const ticket   = (document.getElementById("linkTicket").value || "").trim();
     const analista = (document.getElementById("analistaAg").value || "").trim();
-
-    // valida mínimos do Agendados
     document.getElementById("linkTicket").classList.remove("error");
     document.getElementById("analistaAg").classList.remove("error");
     const falta = [];
@@ -471,13 +461,11 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
     if (falta.length) { alert("Preencha os campos obrigatórios:\n- " + falta.join("\n- ")); return; }
 
     const info   = selectedInfo();
-    const dueISO = computeDueISO();  // <= exatamente o VENCIMENTO exibido
-
     const payload = {
       cliente   : state.loja || "<LOJA>",
       etapa     : info.etapa,
       risco     : state.risco,
-      due       : dueISO,
+      due       : state.dataBase,      // yyyy-mm-dd (sincronizado com Data base)
       analista  : analista,
       obs       : info.proximaAcao,
       ticket_url: ticket
@@ -485,14 +473,13 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
 
     await apiPost("/api/tickets", payload);
 
-    // limpar campos do formulário "Agendados"
+    // insere a macro na descrição, fecha painel e...
+    document.getElementById("inserirMacro").click();
+
+    // ...limpa os campos de criação de tarefa
     document.getElementById("linkTicket").value = "";
     document.getElementById("analistaAg").value = "";
-    document.getElementById("linkTicket").classList.remove("error");
-    document.getElementById("analistaAg").classList.remove("error");
 
-    // Fechar macros (opcional) e atualizar a lista
-    document.getElementById("inserirMacro").click();
     await updateAgendaList(true);
     alert("Tarefa criada com sucesso!");
   } catch (err) {
@@ -509,7 +496,7 @@ async function updateAgendaList(forceFromServer=false){
 
   const ui     = document.getElementById("listaAgenda");
   const chips  = document.getElementById("resumoChips");
-  if (ui) ui.innerHTML = `<div class="muted">Carregando…</div>`;
+  ui.innerHTML = `<div class="muted">Carregando…</div>`;
 
   try {
     const q = new URLSearchParams();
@@ -518,38 +505,35 @@ async function updateAgendaList(forceFromServer=false){
     if (anal)  q.set("analista", anal);
     const items = await apiGet(`/api/tickets?${q.toString()}`);
 
-    const list = Array.isArray(items) ? items : (items?.items || []);
+    if (!Array.isArray(items)) throw new Error("Resposta inesperada da API");
 
-    const names = Array.from(new Set(list.map(t => t.analista).filter(Boolean))).sort();
+    // nomes vindos do servidor
+    const serverNames = items.map(t => t.analista).filter(Boolean);
+    // default + servidor (sem duplicar)
+    const allNames = Array.from(new Set([...DEFAULT_ANALYSTS, ...serverNames])).sort();
+
+    // filtro "Analista" (aba Agenda)
     const selAnal = document.getElementById("filtroAnalista");
-    if (selAnal){
-      const cur = selAnal.value;
-      selAnal.innerHTML = `<option value="">Todos</option>` + names.map(n => `<option ${cur===n?'selected':''}>${n}</option>`).join("");
-    }
+    const cur = selAnal.value;
+    selAnal.innerHTML =
+      `<option value="">Todos</option>` +
+      allNames.map(n => `<option ${cur === n ? "selected" : ""}>${n}</option>`).join("");
 
-    // datalist do formulário de criação
+    // datalist (aba Agendados)
     const dl = document.getElementById("analistasList");
-    if (dl){
-      const defaults = ["SILVÉRIA COSTA","IGOR ARAUJO","DIEGO RIBEIRO","RAFAEL CORONA"];
-      const merged = Array.from(new Set([...defaults, ...names]));
-      dl.innerHTML = merged.map(n => `<option value="${n}"></option>`).join("");
-    }
+    dl.innerHTML = allNames.map(n => `<option value="${n}"></option>`).join("");
 
     const byEtapa = {};
-    list.forEach(t => { byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1; });
-    if (chips){
-      chips.innerHTML = Object.keys(byEtapa).length
-        ? Object.entries(byEtapa).map(([k,v]) => `<span class="chip">${k}: ${v}</span>`).join("")
-        : `<span class="muted">Sem comunicações neste dia.</span>`;
-    }
+    items.forEach(t => { byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1; });
+    chips.innerHTML = Object.keys(byEtapa).length
+      ? Object.entries(byEtapa).map(([k,v]) => `<span class="chip">${k}: ${v}</span>`).join("")
+      : `<span class="muted">Sem comunicações neste dia.</span>`;
 
-    if (!ui) return;
-
-    if (!list.length){
+    if (!items.length){
       ui.innerHTML = `<div class="muted">Nenhuma tarefa para esta data.</div>`;
     } else {
       ui.innerHTML = "";
-      list.forEach(t => {
+      items.forEach(t => {
         const over = overdueInfo(t.due);
         const venc = fmt(new Date(t.due));
         const card = document.createElement("div");
@@ -579,11 +563,10 @@ async function updateAgendaList(forceFromServer=false){
         ui.appendChild(card);
       });
     }
-    const total = document.getElementById("totalAgenda");
-    if (total) total.textContent = "Total (servidor): " + list.length;
+    document.getElementById("totalAgenda").textContent = "Total (servidor): " + items.length;
   } catch (err) {
     console.error(err);
-    if (ui) ui.innerHTML = `<div class="muted">Falha ao carregar: ${err.message}</div>`;
+    ui.innerHTML = `<div class="muted">Falha ao carregar: ${err.message}</div>`;
     alert("Erro ao carregar agenda do servidor.\n" + err.message);
   }
 }
@@ -598,9 +581,8 @@ function exportCsv(){
   if (anal)  q.set("analista", anal);
 
   apiGet(`/api/tickets?${q.toString()}`).then(items=>{
-    const list = Array.isArray(items) ? items : (items?.items || []);
     const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
-    const rows=list.map(t=>[
+    const rows=items.map(t=>[
       t.id, t.cliente, t.etapa, t.risco, fmt(new Date(t.due)),
       t.analista||"", t.obs||"", t.ticket_url||"", (overdueInfo(t.due)?"VENCIDO":"No prazo")
     ]);
@@ -615,16 +597,21 @@ function exportCsv(){
 
 /* ===================== BOOT ===================== */
 ["filtroData","filtroAnalista","filtroTipo"].forEach(id=>{
-  const el=document.getElementById(id);
-  if (el) el.addEventListener("change",()=>updateAgendaList(true));
+  document.getElementById(id).addEventListener("change",()=>updateAgendaList(true));
 });
-const btnExp=document.getElementById("btnExport");
-if (btnExp) btnExp.addEventListener("click",exportCsv);
+document.getElementById("btnExport").addEventListener("click",exportCsv);
 
 (function boot(){
   document.getElementById("dataBase").value=state.dataBase;
-  const fd=document.getElementById("filtroData");
-  if (fd) fd.value=new Date().toISOString().slice(0,10);
+  document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
+
+  // primeiro preenchimento do datalist/filtro com os padrões,
+  // mesmo antes de qualquer chamada de API
+  const dl = document.getElementById("analistasList");
+  dl.innerHTML = DEFAULT_ANALYSTS.map(n => `<option value="${n}"></option>`).join("");
+  const selAnal = document.getElementById("filtroAnalista");
+  selAnal.innerHTML = `<option value="">Todos</option>` + DEFAULT_ANALYSTS.map(n=>`<option>${n}</option>`).join("");
+
   updateEtapas(); refreshAll();
 })();
 </script>
