@@ -9,57 +9,46 @@
       --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
       --slate-600:#475569; --slate-700:#334155; --slate-800:#1f2937; --slate-900:#0f172a;
       --rose-600:#e11d48; --rose-50:#fff1f2;
-      --brand:#0f172a;
     }
     *{ box-sizing:border-box; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
     html,body{ height:100%; }
     body{ margin:0; background:var(--slate-100); color:#0b1220; overflow-y:auto; }
 
-    /* página */
     .page{
       max-width:1100px; margin:20px auto 140px auto; background:#fff;
       border:1px solid var(--slate-200); border-radius:14px; overflow:hidden;
       box-shadow:0 12px 34px rgba(16,24,40,.08);
     }
-    .bar{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:8px 12px; height:44px;           /* mais baixa p/ caber tudo */
-      background:var(--brand); color:#fff;
-      border-bottom:1px solid rgba(255,255,255,.1);
-    }
-    .bar b{ font-size:13px; }
-    .bar small{ opacity:.8; }
-
-    .content{ padding:14px; }
+    .bar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0f172a; color:#fff; }
+    .content{ padding:16px; }
     .label{ font-size:13px; color:#475569; display:block; margin-bottom:4px; }
-    .textarea{ margin-top:8px; width:100%; height:46vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
+    .textarea{ margin-top:8px; width:100%; height:48vh; border:1px solid var(--slate-200); border-radius:10px; padding:12px; font-size:14px; resize:vertical; }
 
-    /* Footer fixo com botão */
+    /* Footer */
     .footer{
       position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:1100px;
       background:rgba(15,23,42,.96); color:#fff; border-top-left-radius:12px; border-top-right-radius:12px;
       border:1px solid #00000055; z-index:9999;
     }
-    .footer-inner{ display:flex; justify-content:flex-end; gap:10px; padding:10px 12px; }
+    .footer-inner{ display:flex; justify-content:flex-end; gap:10px; padding:12px 16px; }
     .btn{ border:0; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
     .btn.white{ background:#fff; color:#111827; }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Painel flutuante */
-    .panel{ position:fixed; left:50%; transform:translateX(-50%); bottom:72px; width:1100px; display:none; z-index:10000; }
-    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
-    .panel .hdr{
-      display:flex; align-items:center; gap:8px; padding:8px 12px; height:40px;   /* compacto */
-      background:var(--brand); color:#fff; font-weight:800; font-size:13px;
+    /* Painel (menor + rolagem) */
+    .panel{
+      position:fixed; left:50%; transform:translateX(-50%); bottom:74px; width:980px;  /* menor */
+      display:none; z-index:10000; max-height:78vh; overflow:auto;  /* rolagem interna */
     }
+    .panel .wrap{ background:#fff; border:1px solid var(--slate-200); border-radius:14px; box-shadow:0 12px 34px rgba(16,24,40,.18); overflow:hidden; }
+    .panel .hdr{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0f172a; color:#fff; font-weight:800; font-size:13px; position:sticky; top:0; z-index:1;}
     .panel .body{ padding:12px; background:#fff; }
 
-    /* abas */
-    .tabs{ display:flex; gap:8px; margin-bottom:10px; }
+    /* Tabs compactas */
+    .tabs{ display:flex; gap:6px; margin-bottom:8px; }
     .tab{ padding:6px 10px; border:1px solid var(--slate-200); border-radius:999px; background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
-    .tab.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+    .tab.active{ background:#0f172a; color:#fff; border-color:#0f172a; }
 
-    /* cartões e campos */
     .grid{ display:grid; gap:10px; }
     .grid-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
     .grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -70,15 +59,13 @@
     .muted{ color:#6b7280; font-size:12px; }
     .pill{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:2px 8px; font-size:11px; font-weight:800; }
     .badge{ background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490; padding:2px 6px; border-radius:999px; font-size:11px; }
-    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600); padding:2px 6px; border-radius:999px; font-weight:800; }
+    .badge-red{ background:var(--rose-50); border:1px solid var(--rose-600); color:var(--rose-600); padding:2px 6px; border-radius:999px; font-size:11px; font-weight:800; }
     .due-red{ color:var(--rose-600); font-weight:800; }
-
     .list{ max-height:260px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
     a.link{ color:#0b5fe0; text-decoration:none; } a.link:hover{ text-decoration:underline; }
     .filters{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .chip{ background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; }
 
-    /* obrigatórios (visual) */
     .req::after{ content:" *"; color:#ef4444; font-weight:800; }
     .input.error, .select.error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15); }
   </style>
@@ -188,8 +175,9 @@
               <datalist id="analistasList"></datalist>
             </label>
           </div>
-          <div style="margin-top:8px;">
+          <div style="margin-top:8px; display:flex; gap:10px;">
             <button class="btn" id="criarTarefa">Criar tarefa</button>
+            <button class="btn white" id="limparAgendados">Limpar</button>
           </div>
         </div>
 
@@ -199,7 +187,7 @@
             <span class="muted">Data:</span>
             <input type="date" class="input" id="filtroData" style="width:170px">
             <span class="muted">Analista:</span>
-            <select class="select" id="filtroAnalista" style="width:180px">
+            <select class="select" id="filtroAnalista" style="width:220px">
               <option value="">Todos</option>
             </select>
             <span class="muted">Comunicação:</span>
@@ -289,15 +277,14 @@ Permanecemos à disposição para esclarecimentos formais.
 Atenciosamente,` },
 };
 
-/* analistas padrão — sempre presentes nas listas */
+/* ===================== ESTADO / FUNÇÕES ===================== */
 const DEFAULT_ANALYSTS = [
   "SILVÉRIA COSTA",
   "IGOR ARAUJO",
   "DIEGO RIBEIRO",
-  "RAFAEL CORONA",
+  "RAFAEL CORONA"
 ];
 
-/* ===================== ESTADO / FUNÇÕES ===================== */
 const state = {
   risco:"Médio & Baixo",
   etapa:"Comunicação Inicial",
@@ -332,20 +319,32 @@ function overdueInfo(due){
   return today.getTime()>d.getTime();
 }
 
-/* ========= API HELPERS ========= */
-async function apiFetch(url, opts={}) {
-  const res = await fetch(url, { headers:{'content-type':'application/json'}, ...opts });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || res.statusText);
+/* ========= API HELPERS (robusto contra respostas não-JSON) ========= */
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { 'content-type': 'application/json' },
+    ...opts
+  });
+
+  const text = await res.text(); // lê uma vez
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    throw new Error('Resposta inesperada da API');
   }
-  return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
+
+  if (!res.ok) {
+    const msg = (data && (data.error || data.message)) || res.statusText;
+    throw new Error(msg || 'Falha na API');
+  }
+  return data;
 }
 const apiGet    = (url)       => apiFetch(url);
 const apiPost   = (url, body) => apiFetch(url, { method:'POST', body: JSON.stringify(body) });
 const apiDelete = (url)       => apiFetch(url, { method:'DELETE' });
 
-/* ========= UI auxiliares ========= */
+/* ========= UI ========= */
 function updateEtapas(){
   const sel=document.getElementById("etapa");
   sel.innerHTML = FLOWS[state.risco].map(x=>`<option ${x.etapa===state.etapa?'selected':''}>${x.etapa}</option>`).join("");
@@ -400,7 +399,7 @@ function validateComunicacao(){
   return true;
 }
 
-/* ===================== UI HANDLERS ===================== */
+/* ===================== HANDLERS UI ===================== */
 document.getElementById("btn-macros").addEventListener("click",(e)=>{
   e.stopPropagation();
   const p=document.getElementById("panel");
@@ -434,21 +433,12 @@ document.getElementById("copiarMacro").addEventListener("click",()=>{
   alert("Comunicação copiada!");
 });
 
-/* Inserir na descrição: valida -> insere -> fecha painel -> foca na descrição */
-document.getElementById("inserirMacro").addEventListener("click",()=>{
-  if(!validateComunicacao()) return;
-  const ta=document.getElementById("desc");
-  const txt=document.getElementById("macroText").value;
-  ta.value=(ta.value?ta.value+"\n\n":"")+txt;
-
-  const p=document.getElementById("panel");
-  p.style.display="none";
-
-  ta.scrollIntoView({behavior:"smooth", block:"start"});
-  setTimeout(()=>{ ta.focus(); const end=ta.value.length; ta.setSelectionRange(end,end); },300);
+document.getElementById("limparAgendados").addEventListener("click",()=>{
+  document.getElementById("linkTicket").value = "";
+  document.getElementById("analistaAg").value = "";
 });
 
-/* Criar tarefa – via API (POST /api/tickets) e limpar campos */
+/* Criar tarefa – via API (POST /api/tickets) */
 document.getElementById("criarTarefa").addEventListener("click", async () => {
   try {
     const ticket   = (document.getElementById("linkTicket").value || "").trim();
@@ -461,11 +451,12 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
     if (falta.length) { alert("Preencha os campos obrigatórios:\n- " + falta.join("\n- ")); return; }
 
     const info   = selectedInfo();
+    const dueDate = addBusinessDays(state.dataBase, info.prazoUteis || 0).toISOString().slice(0,10); // sincroniza com vencimento
     const payload = {
       cliente   : state.loja || "<LOJA>",
       etapa     : info.etapa,
       risco     : state.risco,
-      due       : state.dataBase,      // yyyy-mm-dd (sincronizado com Data base)
+      due       : dueDate,         // YYYY-MM-DD (vencimento sincronizado)
       analista  : analista,
       obs       : info.proximaAcao,
       ticket_url: ticket
@@ -473,12 +464,17 @@ document.getElementById("criarTarefa").addEventListener("click", async () => {
 
     await apiPost("/api/tickets", payload);
 
-    // insere a macro na descrição, fecha painel e...
-    document.getElementById("inserirMacro").click();
-
-    // ...limpa os campos de criação de tarefa
+    // Limpa campos
     document.getElementById("linkTicket").value = "";
     document.getElementById("analistaAg").value = "";
+
+    // Vai para AGENDA e sincroniza data do filtro com o vencimento
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelector('[data-tab="agenda"]').classList.add("active");
+    document.getElementById("tab-comunicacoes").style.display="none";
+    document.getElementById("tab-agendados").style.display="none";
+    document.getElementById("tab-agenda").style.display="block";
+    document.getElementById("filtroData").value = dueDate;
 
     await updateAgendaList(true);
     alert("Tarefa criada com sucesso!");
@@ -504,36 +500,30 @@ async function updateAgendaList(forceFromServer=false){
     if (etapa) q.set("etapa", etapa);
     if (anal)  q.set("analista", anal);
     const items = await apiGet(`/api/tickets?${q.toString()}`);
+    const data  = Array.isArray(items) ? items : [];      // tolerante
 
-    if (!Array.isArray(items)) throw new Error("Resposta inesperada da API");
-
-    // nomes vindos do servidor
-    const serverNames = items.map(t => t.analista).filter(Boolean);
-    // default + servidor (sem duplicar)
-    const allNames = Array.from(new Set([...DEFAULT_ANALYSTS, ...serverNames])).sort();
-
-    // filtro "Analista" (aba Agenda)
+    // popular filtro de analistas
+    const namesSrv = Array.from(new Set(data.map(t => t.analista).filter(Boolean)));
+    const names = Array.from(new Set([...DEFAULT_ANALYSTS, ...namesSrv])).sort();
     const selAnal = document.getElementById("filtroAnalista");
     const cur = selAnal.value;
-    selAnal.innerHTML =
-      `<option value="">Todos</option>` +
-      allNames.map(n => `<option ${cur === n ? "selected" : ""}>${n}</option>`).join("");
+    selAnal.innerHTML = `<option value="">Todos</option>` + names.map(n => `<option ${cur===n?'selected':''}>${n}</option>`).join("");
 
-    // datalist (aba Agendados)
+    // datalist do formulário de criação
     const dl = document.getElementById("analistasList");
-    dl.innerHTML = allNames.map(n => `<option value="${n}"></option>`).join("");
+    dl.innerHTML = names.map(n => `<option value="${n}"></option>`).join("");
 
     const byEtapa = {};
-    items.forEach(t => { byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1; });
+    data.forEach(t => { byEtapa[t.etapa] = (byEtapa[t.etapa]||0)+1; });
     chips.innerHTML = Object.keys(byEtapa).length
       ? Object.entries(byEtapa).map(([k,v]) => `<span class="chip">${k}: ${v}</span>`).join("")
       : `<span class="muted">Sem comunicações neste dia.</span>`;
 
-    if (!items.length){
+    if (!data.length){
       ui.innerHTML = `<div class="muted">Nenhuma tarefa para esta data.</div>`;
     } else {
       ui.innerHTML = "";
-      items.forEach(t => {
+      data.forEach(t => {
         const over = overdueInfo(t.due);
         const venc = fmt(new Date(t.due));
         const card = document.createElement("div");
@@ -563,7 +553,7 @@ async function updateAgendaList(forceFromServer=false){
         ui.appendChild(card);
       });
     }
-    document.getElementById("totalAgenda").textContent = "Total (servidor): " + items.length;
+    document.getElementById("totalAgenda").textContent = "Total (servidor): " + data.length;
   } catch (err) {
     console.error(err);
     ui.innerHTML = `<div class="muted">Falha ao carregar: ${err.message}</div>`;
@@ -581,8 +571,9 @@ function exportCsv(){
   if (anal)  q.set("analista", anal);
 
   apiGet(`/api/tickets?${q.toString()}`).then(items=>{
+    const data = Array.isArray(items) ? items : [];
     const headers=["ID","Cliente","Etapa","Risco","Vencimento","Analista","Próxima ação","Ticket","Status"];
-    const rows=items.map(t=>[
+    const rows=data.map(t=>[
       t.id, t.cliente, t.etapa, t.risco, fmt(new Date(t.due)),
       t.analista||"", t.obs||"", t.ticket_url||"", (overdueInfo(t.due)?"VENCIDO":"No prazo")
     ]);
@@ -602,16 +593,14 @@ function exportCsv(){
 document.getElementById("btnExport").addEventListener("click",exportCsv);
 
 (function boot(){
-  document.getElementById("dataBase").value=state.dataBase;
-  document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
-
-  // primeiro preenchimento do datalist/filtro com os padrões,
-  // mesmo antes de qualquer chamada de API
+  // analistas default no datalist e no filtro
   const dl = document.getElementById("analistasList");
   dl.innerHTML = DEFAULT_ANALYSTS.map(n => `<option value="${n}"></option>`).join("");
   const selAnal = document.getElementById("filtroAnalista");
-  selAnal.innerHTML = `<option value="">Todos</option>` + DEFAULT_ANALYSTS.map(n=>`<option>${n}</option>`).join("");
+  selAnal.innerHTML = `<option value="">Todos</option>` + DEFAULT_ANALYSTS.map(n => `<option>${n}</option>`).join("");
 
+  document.getElementById("dataBase").value=state.dataBase;
+  document.getElementById("filtroData").value=new Date().toISOString().slice(0,10);
   updateEtapas(); refreshAll();
 })();
 </script>
